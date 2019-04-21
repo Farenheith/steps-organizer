@@ -1,0 +1,44 @@
+{
+  "name": "steps-organizer",
+  "version": "0.0.1",
+  "description": "Steps Organizer",
+  "main": "index.js",
+  "scripts": {
+    "test": "nyc npm run testNoCoverage",
+    "testNoCoverage": "jasmine-ts --config=jasmine.json"
+  },
+  "author": "Farenheith",
+  "license": "MIT",
+  "dependencies": {
+    "base-ddd": "github:Farenheith/base-ddd"
+  },
+  "devDependencies": {
+    "@types/jasmine": "^3.3.12",
+    "jasmine": "^3.4.0",
+    "jasmine-console-reporter": "^3.1.0",
+    "jasmine-ts": "^0.3.0",
+    "nyc": "^14.0.0"
+  },
+  "nyc": {
+    "extension": [
+      ".ts",
+      ".tsx"
+    ],
+    "exclude": [
+      "src/interfaces",
+      "src/index.ts",
+      "coverage",
+      "test",
+      "build"
+    ],
+    "reporter": [
+      "html",
+      "text"
+    ],
+    "all": true,
+    "check-coverage": true,
+    "lines": 100,
+    "branches": 100,
+    "functions": 100
+  }
+}
