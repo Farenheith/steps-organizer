@@ -1,0 +1,11 @@
+{
+    "reporters": [
+      {
+        "name": "jasmine-console-reporter"
+      }
+    ],
+    "spec_dir": "test",
+    "spec_files": [
+      "**/**.test.ts"
+    ]
+  }

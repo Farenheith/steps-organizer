@@ -10,10 +10,14 @@
   "author": "Farenheith",
   "license": "MIT",
   "dependencies": {
+    "@types/joi": "^14.3.3",
     "@types/uuid": "^3.4.4",
     "base-ddd": "github:Farenheith/base-ddd",
     "bluebird": "^3.5.4",
     "inversify": "^5.0.1",
+    "joi": "^14.3.1",
+    "node-ts": "^5.0.0",
+    "reflect-metadata": "^0.1.13",
     "ts-node": "^7.0.0",
     "typescript": "^3.4.4",
     "uuid": "^3.3.2"

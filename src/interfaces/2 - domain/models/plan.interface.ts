@@ -7,6 +7,7 @@ export interface IPlan {
 }
 
 export interface IStage {
+    stageNumber: number;
     startTime: number;
     steps: IStep[];
 }

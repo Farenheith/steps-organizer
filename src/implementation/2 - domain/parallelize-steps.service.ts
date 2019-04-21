@@ -5,7 +5,7 @@ import { IParallelizeStepsService } from "../../interfaces/2 - domain/paralleliz
 import { promisify } from "bluebird";
 import { IStep } from "../../interfaces/2 - domain/models/step.interface";
 
-export class ParallelizeSteps extends BaseService<IRecipe, IPlan> implements IParallelizeStepsService {
+export class ParallelizeStepsService extends BaseService<IRecipe, IPlan> implements IParallelizeStepsService {
     async proceed(data: IRecipe): Promise<IPlan> {
         const result:IPlan = {
             results: data.results,
@@ -17,10 +17,12 @@ export class ParallelizeSteps extends BaseService<IRecipe, IPlan> implements IPa
 
     async getStages(data: IRecipe): Promise<IStage[]> {
         const result = new Array<IStage>();
+        let stageNumber = 1
         await ArrayHelper.forEachAsync(data.steps, async (x: IStep) => {
-            const idx = await result.findIndex(x => x.startTime == x.startTime!);
+            const idx = await result.findIndex(s => s.startTime == x.startTime!);
             if (idx < 0) {
-                result.push({ startTime: x.startTime!, steps: [ x ] })
+                result.push({ stageNumber, startTime: x.startTime!, steps: [ x ] });
+                stageNumber++;
             } else {
                 result[idx].steps.push(x);
             }
