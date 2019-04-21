@@ -1,12 +1,13 @@
 import { IMaterial } from "./material.interface";
+import { StepTypeEnum } from "./enums/step-type.enum";
 
 export interface IStep {
-    readonly name: string;
-    readonly order: number;
+    readonly id: string;
     readonly description: string;
-    readonly dependencies: number[];
+    readonly dependencies: string[];
     readonly materials: IMaterial[];
-    readonly waitingTime: number;
-    readonly result?: IMaterial;
-    readonly stimatedTime: number;
+    readonly type: StepTypeEnum;
+    readonly duration: number;
+    result?: IMaterial;
+    startTime?: number;
 }
