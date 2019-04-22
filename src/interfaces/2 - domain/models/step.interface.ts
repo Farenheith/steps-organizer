@@ -8,6 +8,12 @@ export interface IStep {
     readonly materials: IMaterial[];
     readonly type: StepTypeEnum;
     readonly duration: number;
+    metadata: IMetadata;
+}
+
+interface IMetadata {
+    greaterEndTime?: number;
+    greaterDependencyId?: string;
     result?: IMaterial;
-    startTime?: number;
+    startTime: number;
 }

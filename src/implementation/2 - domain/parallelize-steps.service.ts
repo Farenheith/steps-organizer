@@ -17,16 +17,43 @@ export class ParallelizeStepsService extends BaseService<IRecipe, IPlan> impleme
 
     async getStages(data: IRecipe): Promise<IStage[]> {
         const result = new Array<IStage>();
-        let stageNumber = 1
+        let stageNumber = 0;
+        let canSum = true;
+        let lastStage:IStage;
+        let minEndTime:number;
         await ArrayHelper.forEachAsync(data.steps, async (x: IStep) => {
-            const idx = await result.findIndex(s => s.startTime == x.startTime!);
+            const idx = await result.findIndex(s => s.startTime == x.metadata.startTime
+                                    && s.stageNumber == stageNumber);
+            let stage:IStage;
             if (idx < 0) {
-                result.push({ stageNumber, startTime: x.startTime!, steps: [ x ] });
-                stageNumber++;
+                if (canSum) {
+                    stageNumber++;
+                } else {
+                    canSum = true;
+                }
+                result.push(stage = { stageNumber, startTime: x.metadata.startTime, steps: [ x ] });
             } else {
-                result[idx].steps.push(x);
+                (stage = result[idx]).steps.push(x);
+            }
+            if (stage.steps.length >= data.metadata.maxParallelization) {
+                stageNumber++;
+                canSum = false;
+                lastStage = stage;
+                minEndTime = this.getMinEndTime(stage);
             }
         });
+        return result;
+    }
+
+    getMinEndTime(stage: IStage) {
+        let result = stage.steps[0].metadata.startTime + stage.steps[0].duration;
+        for (let i = 1; i < stage.steps.length; i++) {
+            const minCandidate = stage.steps[i].metadata.startTime + stage.steps[i].duration;
+            if (result > minCandidate) {
+                result = minCandidate;
+            }
+        }
+
         return result;
     }
     

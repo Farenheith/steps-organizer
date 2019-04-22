@@ -1,11 +1,6 @@
 import "jasmine";
 import "reflect-metadata";
 import { ParallelizeStepsService } from "../../src/implementation/2 - domain/parallelize-steps.service"
-import { IParallelizeStepsService } from "../../src/interfaces/2 - domain/parallelize-steps-service.interface";
-import { IWorkResume } from "../../src/interfaces/2 - domain/models/work-resume.interface";
-import { IMaterial } from "../../src/interfaces/2 - domain/models/material.interface";
-import { IStep } from "../../src/interfaces/2 - domain/models/step.interface";
-import { IRecipe } from "../../src/interfaces/2 - domain/models/recipe.interface";
 
 describe("ParallelizeStepsService", () => {
     it("proceed: ok", async () => {
@@ -27,41 +22,56 @@ describe("ParallelizeStepsService", () => {
     it("getStages: ok", async () => {
         //Arrange
         const target = new ParallelizeStepsService({} as any, {} as any, {} as any);
+        spyOn(target, "getMinEndTime");
 
         //Act
         const result = await target.getStages({ steps:[
             {
                 id: "a",
-                startTime: 0
+                metadata: {
+                    startTime: 0
+                }
             } as any,
             {
                 id: "b",
-                startTime: 0
+                metadata: {
+                    startTime: 0
+                }
             },
             {
                 id: "c",
-                startTime: 1
+                metadata: {
+                    startTime: 1
+                }
             },
             {
                 id: "d",
-                startTime: 2
+                metadata: {
+                    startTime: 2
+                }
             },
             {
                 id: "e",
-                startTime: 3
+                metadata: {
+                    startTime: 3
+                }
             },
             {
                 id: "f",
-                startTime: 3 
+                metadata: {
+                    startTime: 3
+                }
             },
             {
                 id: "g",
-                startTime: 3 
+                metadata: {
+                    startTime: 3
+                }
             }
         ],
-        results: "RESULTS" as any,
-        description: "DESCRIPTION",
-        name: "NAME" });
+        metadata: {
+            maxParallelization: 3
+        }} as any);
 
         //Assert
         expect(result).toEqual([ {
@@ -69,11 +79,15 @@ describe("ParallelizeStepsService", () => {
                 startTime: 0,
                 steps: [ {
                         id: "a",
-                        startTime: 0
+                        metadata: {
+                            startTime: 0
+                        }
                     } as any,
                     {
                         id: "b",
-                        startTime: 0
+                        metadata: {
+                            startTime: 0
+                        }
                     }
                 ]
             }, {
@@ -81,7 +95,9 @@ describe("ParallelizeStepsService", () => {
                 startTime: 1,
                 steps: [ {
                         id: "c",
-                        startTime: 1
+                        metadata: {
+                            startTime: 1
+                        }
                     }
                 ]
             }, {
@@ -90,7 +106,9 @@ describe("ParallelizeStepsService", () => {
                 steps: [
                     {
                         id: "d",
-                        startTime: 2
+                        metadata: {
+                            startTime: 2
+                        }
                     }
                 ]
             }, {
@@ -99,15 +117,21 @@ describe("ParallelizeStepsService", () => {
                 steps: [
                     {
                         id: "e",
-                        startTime: 3
+                        metadata: {
+                            startTime: 3
+                        }
                     },
                     {
                         id: "f",
-                        startTime: 3 
+                        metadata: {
+                            startTime: 3
+                        }
                     },
                     {
                         id: "g",
-                        startTime: 3 
+                        metadata: {
+                            startTime: 3
+                        }
                     }
                 ]
             }

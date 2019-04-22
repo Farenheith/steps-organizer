@@ -6,4 +6,9 @@ export interface IRecipe {
     readonly description: string;
     readonly steps: IStep[];
     readonly results: IMaterial[];
+    metadata: IMetadata;
+}
+
+interface IMetadata {
+    maxParallelization: number;
 }

@@ -71,7 +71,7 @@ describe("OrganizeStepsService", () => {
                     results: [ "RESULTADO2", "RESULTADO2_2" ] as any[],
                     steps: [ "PASSO2_1", "PASSO2_2", "PASSO2_3" ] as any[]
                 }
-            ]
+            ] as any
         };
         const results = new Array<IMaterial>();
         const iterators = new Array<IterableIterator<[ Number, IStep]>>();
@@ -121,13 +121,19 @@ describe("OrganizeStepsService", () => {
                     results: [ "RESULTADO1" as any ],
                     steps: [ {
                         name: "PASSO1_1",
-                        startTime: 10
+                        metadata: {
+                            startTime: 10
+                        }
                     }, {
                         name: "PASSO1_2",
-                        startTime: 5
+                        metadata:{
+                            startTime: 5
+                        }
                     }, {
                         name: "PASSO1_3",
-                        startTime: 8
+                        metadata:{
+                            startTime: 8
+                        }
                     } ] as any[],
                 },
                 {
@@ -136,17 +142,23 @@ describe("OrganizeStepsService", () => {
                     results: [ "RESULTADO2", "RESULTADO2_2" ] as any[],
                     steps: [ {
                         name: "PASSO2_1",
-                        startTime: 2
+                        metadata: {
+                            startTime: 2
+                        }
                     }, {
                         name: "PASSO2_2",
-                        startTime: 7
+                        metadata: {
+                            startTime: 7
+                        }
                     }, {
                         name: "PASSO2_3",
-                        startTime: 9
+                        metadata: {
+                            startTime: 9
+                        }
                     } ] as any[]
                 }
             ]
-        };
+        } as any;
 
         //Act
         const result = await target.joinAndSort(workResume);
@@ -154,22 +166,34 @@ describe("OrganizeStepsService", () => {
         //Assert
         expect(result).toEqual([ {
             name: "PASSO2_1",
-            startTime: 2
+            metadata: {
+                startTime: 2
+            }
         }, {
             name: "PASSO1_2",
-            startTime: 5
+            metadata: {
+                startTime: 5
+            }
         }, {
             name: "PASSO2_2",
-            startTime: 7
+            metadata: {
+                startTime: 7
+            }
         }, {
             name: "PASSO1_3",
-            startTime: 8
+            metadata: {
+                startTime: 8
+            }
         }, {
             name: "PASSO2_3",
-            startTime: 9
+            metadata: {
+                startTime: 9
+            }
         }, {
             name: "PASSO1_1",
-            startTime: 10
+            metadata: {
+                startTime: 10
+            }
         } ] as any[]);
     });
 
@@ -182,7 +206,7 @@ describe("OrganizeStepsService", () => {
         await target.setStartTime(step, {} as any);
 
         //Assert
-        expect(step.startTime).toBe(0);
+        expect(step.metadata.startTime).toBe(0);
     });
 
     it("setStarttime: ok (dependencies empty)", async () => {
@@ -194,13 +218,16 @@ describe("OrganizeStepsService", () => {
         await target.setStartTime(step, {} as any);
 
         //Assert
-        expect(step.startTime).toBe(0);
+        expect(step.metadata.startTime).toBe(0);
     });
 
     it("setStarttime: fail (startTime already defined)", async () => {
         //Arrange
         const target = new OrganizeStepsService({} as any, {} as any, {} as any);
-        const step: IStep = { dependencies: ["b"], startTime: 0 } as any;
+        const step: IStep = { dependencies: ["b"],
+            metadata: {
+                startTime: 0 
+             }} as any;
         spyOn(target, "message");
 
         //Act
@@ -219,7 +246,7 @@ describe("OrganizeStepsService", () => {
             name: "receita 1",
             results: [ "RESULTADO1" as any ],
             steps: [],
-        };
+        } as any;
         spyOn(target, "message");
 
         //Act
@@ -241,7 +268,7 @@ describe("OrganizeStepsService", () => {
                 id: "a",
                 name: "PASSO1_1"
             }] as any[],
-        };
+        } as any;
         spyOn(target, "message");
 
         //Act
@@ -262,21 +289,25 @@ describe("OrganizeStepsService", () => {
             steps: [ {
                 id: "a",
                 name: "PASSO1_1",
-                startTime: 1,
-                duration: 3
+                duration: 3,
+                metadata: {
+                    startTime: 1,
+                }
             }, {
                 id: "b",
                 name: "PASSO1_1",
-                startTime: 1,
-                duration: 2
+                duration: 2,
+                metadata: {
+                    startTime: 1,
+                }
             }] as any[],
-        };
+        } as any;
 
         //Act
         await target.setStartTime(step, recipe);
 
         //Assert
-        expect(step.startTime).toBe(4);
+        expect(step.metadata.startTime).toBe(4);
     });
 
     it("setStarttimes: fail (notification)", async () => {
@@ -289,8 +320,10 @@ describe("OrganizeStepsService", () => {
             steps: [ {
                 id: "a",
                 name: "PASSO1_1",
-                startTime: 1,
-                duration: 3
+                duration: 3,
+                metadata: {
+                    startTime: 1
+                }
             }] as any[],
         }, {
             description: "teste",
@@ -299,15 +332,19 @@ describe("OrganizeStepsService", () => {
             steps: [ {
                 id: "a",
                 name: "PASSO1_1",
-                startTime: 1,
-                duration: 3
+                duration: 3,
+                metadata: {
+                    startTime: 1
+                }
             }, {
                 id: "a",
                 name: "PASSO1_1",
-                startTime: 1,
-                duration: 2
+                duration: 2,
+                metadata: {
+                    startTime: 1
+                }
             }] as any[],
-        }];
+        }] as any[];
         const iterators = [ recipes[0].steps.entries(),
             recipes[1].steps.entries() ];
         spyOn(target, "hasNotification").and.returnValue(true);
@@ -331,9 +368,7 @@ describe("OrganizeStepsService", () => {
             results: [ "RESULTADO1" as any ],
             steps: [ {
                 id: "a",
-                name: "PASSO1_1",
-                startTime: 1,
-                duration: 3
+                name: "PASSO1_1"
             }] as any[],
         }, {
             description: "teste",
@@ -341,16 +376,12 @@ describe("OrganizeStepsService", () => {
             results: [ "RESULTADO1" as any ],
             steps: [ {
                 id: "a",
-                name: "PASSO1_1",
-                startTime: 1,
-                duration: 3
+                name: "PASSO1_1"
             }, {
                 id: "b",
-                name: "PASSO1_1",
-                startTime: 1,
-                duration: 2
+                name: "PASSO1_1"
             }] as any[],
-        }];
+        }] as any;
         const iterators = [ recipes[0].steps.entries(),
             recipes[1].steps.entries() ];
         spyOn(target, "hasNotification").and.returnValue(false);
