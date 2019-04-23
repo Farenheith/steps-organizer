@@ -20,7 +20,7 @@ export class ParallelizeStepsService extends BaseService<IRecipe, IPlan> impleme
         const max = data.metadata.maxParallelization;
         const workers = new Array<(IStep | undefined)[]>(max);
         workers[0] = data.steps; //initial solution involve all steps being done by one worker
-        //Giving a pivot step, will try to figure out if that step can be redistribuited to
+        //Giving a pivot step, we'll try to figure out if that step can be redistribuited to
         //another worker, based on the startTime estimated before
         //that starttime is only defined by the dependency chain of each step
         let i = 0;
@@ -33,12 +33,12 @@ export class ParallelizeStepsService extends BaseService<IRecipe, IPlan> impleme
             const j = i + 1;
             //bufferize stage
             workers.forEach(worker => worker.push(undefined));
-            //Steps are already ordenized by startTime, so, if the comparation failed
+            //Steps are already ordenized by startTime, so, if the comparison fails
             //then this stage is closed
             while (offSet + 1 < max && data.steps.length > j
                     && this.accept(data.steps[j], dependencies)) {
                 const step = data.steps[j];
-                //As the steps area reorganized in stages, very step at the same state will have the same startTime
+                //As the steps are reorganized in stages, every step at the same stage will have the same startTime
                 step.startTime = baseStartTime;
                 workers[offSet + 1][i] = step;
                 processed.push(step);
@@ -48,7 +48,7 @@ export class ParallelizeStepsService extends BaseService<IRecipe, IPlan> impleme
                 running++;
             }
 
-            //advance to the stage definition
+            //advance to the next stage
             i++;
             //which is the defined by the shorter step distributed
             baseStartTime == undefined;
