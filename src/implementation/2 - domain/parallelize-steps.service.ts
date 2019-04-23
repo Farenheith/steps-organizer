@@ -31,17 +31,18 @@ export class ParallelizeStepsService extends BaseService<IRecipe, IPlan> impleme
         let running = 0
         do {
             const j = i + 1;
-            const currentMax = max - offset;
-            let k = 1;
             //bufferize stage
             workers.forEach(worker => worker.push(undefined));
             //Steps are already ordenized by startTime, so, if the comparation failed
             //then this stage is closed
-            while (k < currentMax && data.steps.length > j
+            while (offSet + 1 < max && data.steps.length > j
                     && this.accept(data.steps[j], dependencies)) {
-                workers[k][i] = data.steps[j];
-                processed.push(data.steps[j]);
-                k++;
+                const step = data.steps[j];
+                //As the steps area reorganized in stages, very step at the same state will have the same startTime
+                step.startTime = baseStartTime;
+                workers[offSet + 1][i] = step;
+                processed.push(step);
+                offSet++;
                 //Remove the step redistributed from the main worker
                 data.steps.slice(j, 1);
                 running++;
@@ -51,7 +52,7 @@ export class ParallelizeStepsService extends BaseService<IRecipe, IPlan> impleme
             i++;
             //which is the defined by the shorter step distributed
             baseStartTime == undefined;
-            k = devIdx + 1;
+            let k = devIdx + 1;
             while (k < processed.length) {
                 const candidate = processed[k].metadata.startTime + processed[k].duration;
                 if (!baseStartTime) {
@@ -62,11 +63,9 @@ export class ParallelizeStepsService extends BaseService<IRecipe, IPlan> impleme
                 //dependencies processed with the same endTime will be considered
                 //candidates to parellelization
                 dependencies.push(processed[k].id);
-                running--;
+                offSet--;
                 k++;
             }
-            //define how much slots will be occupied in the next stage
-            offset = max - running;
         } while (i >= data.steps.length); {}
 
         const result = new Array<IStage>();
