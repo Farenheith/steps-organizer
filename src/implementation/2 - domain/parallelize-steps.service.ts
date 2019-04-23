@@ -25,7 +25,7 @@ export class ParallelizeStepsService extends BaseService<IRecipe, IPlan> impleme
         //that starttime is only defined by the dependency chain of each step
         let i = 0;
         let offset = 0;
-        let dependencies: string[] = [];
+        let concludedDependencies: string[] = [];
         let devIdx = -1;
         let baseStartTime: (number | undefined) = 0;
         let running = 0
@@ -62,7 +62,7 @@ export class ParallelizeStepsService extends BaseService<IRecipe, IPlan> impleme
                 }
                 //dependencies processed with the same endTime will be considered
                 //candidates to parellelization
-                dependencies.push(processed[k].id);
+                concludedDependencies.push(processed[k].id);
                 offSet--;
                 k++;
             }
@@ -86,9 +86,11 @@ export class ParallelizeStepsService extends BaseService<IRecipe, IPlan> impleme
         return result;
     }
 
-    accept(step: IStep, dependencies: string[]) {
+    accept(step: IStep, concludedDependencies: string[]) {
+        // The step is only acceptable if it doesn't have any dependency
+        // or all dependencies are concluded;
         return !step.dependencies
-            || !step.dependencies.some(x => dependencies.indexOf(x) < 0)
+            || !step.dependencies.some(x => concludedDependencies.indexOf(x) < 0)
     }
     
     getJoi() {
