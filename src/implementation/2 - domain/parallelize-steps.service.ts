@@ -16,25 +16,77 @@ export class ParallelizeStepsService extends BaseService<IRecipe, IPlan> impleme
     }
 
     async getStages(data: IRecipe): Promise<IStage[]> {
-        const result = new Array<IStage>();
-        let stageNumber = 0;
-        let canSum = true;
-        await ArrayHelper.forEachAsync(data.steps, async (x: IStep) => {
-            const idx = await result.findIndex(s => s.startTime == x.metadata.startTime
-                                    && s.stageNumber == stageNumber);
-            let stage:IStage;
-            if (idx < 0) {
-                if (canSum) {
-                    stageNumber++;
-                } else {
-                    canSum = true;
-                }
-                result.push(stage = { stageNumber, startTime: x.metadata.startTime, steps: [ x ] });
-            } else {
-                (stage = result[idx]).steps.push(x);
+        const processed = new Array<IStep>();
+        const max = data.metadata.maxParallelization;
+        const workers = new Array<(IStep | undefined)[]>(max);
+        workers[0] = data.steps; //initial solution involve all steps being done by one worker
+        //Giving a pivot step, will try to figure out if that step can be redistribuited to
+        //another worker, based on the startTime estimated before
+        //that starttime is only defined by the dependency chain of each step
+        let i = 0;
+        let offset = 0;
+        let dependencies: string[] = [];
+        let devIdx = -1;
+        let baseStartTime: (number | undefined) = 0;
+        do {
+            const j = i + 1;
+            const currentMax = max - offset;
+            let k = 1;
+            //bufferize stage
+            workers.forEach(worker => worker.push(undefined));
+            //Steps are already ordenized by startTime, so, if the comparation failed
+            //then this stage is closed
+            while (k < currentMax && data.steps.length > j
+                    && this.accept(data.steps[j], dependencies)) {
+                workers[k][i] = data.steps[j];
+                processed.push(data.steps[j]);
+                k++;
+                //Remove the step redistributed from the main worker
+                data.steps.slice(j, 1);
             }
-        });
+
+            //advance to the stage definition
+            i++;
+            //which is the defined by the shorter step distributed
+            baseStartTime == undefined;
+            k = devIdx + 1;
+            while (k < processed.length) {
+                const candidate = processed[k].metadata.startTime + processed[k].duration;
+                if (!baseStartTime) {
+                    baseStartTime = candidate;
+                } else if (candidate != baseStartTime) {
+                    break;
+                }
+                //dependencies processed with the same endTime will be considered
+                //candidates to parellelization
+                dependencies.push(processed[k].id);
+                k++;
+            }
+            //define how much slots will be occupied in the next stage
+            offset = 0 //TODO: NÃO CONSEGUE MOISÉS
+        } while (i >= data.steps.length); {}
+
+        const result = new Array<IStage>();
+        for (let k = 0; k < data.steps.length; k++) {
+            const stage:IStage = {
+                startTime: workers[0][k]!.metadata.startTime,
+                steps: [],
+                stageNumber: k + 1
+            };
+            workers.forEach((element, index) => {
+                if (element[k]) {
+                    stage.steps.push(element[k]!);
+                }
+            });
+            result.push(stage);
+        }
+
         return result;
+    }
+
+    accept(step: IStep, dependencies: string[]) {
+        return !step.dependencies
+            || !step.dependencies.some(x => dependencies.indexOf(x) < 0)
     }
     
     getJoi() {
