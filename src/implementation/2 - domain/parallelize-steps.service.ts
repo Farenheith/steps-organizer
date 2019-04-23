@@ -28,6 +28,7 @@ export class ParallelizeStepsService extends BaseService<IRecipe, IPlan> impleme
         let dependencies: string[] = [];
         let devIdx = -1;
         let baseStartTime: (number | undefined) = 0;
+        let running = 0
         do {
             const j = i + 1;
             const currentMax = max - offset;
@@ -43,6 +44,7 @@ export class ParallelizeStepsService extends BaseService<IRecipe, IPlan> impleme
                 k++;
                 //Remove the step redistributed from the main worker
                 data.steps.slice(j, 1);
+                running++;
             }
 
             //advance to the stage definition
@@ -60,10 +62,11 @@ export class ParallelizeStepsService extends BaseService<IRecipe, IPlan> impleme
                 //dependencies processed with the same endTime will be considered
                 //candidates to parellelization
                 dependencies.push(processed[k].id);
+                running--;
                 k++;
             }
             //define how much slots will be occupied in the next stage
-            offset = 0 //TODO: NÃO CONSEGUE MOISÉS
+            offset = max - running;
         } while (i >= data.steps.length); {}
 
         const result = new Array<IStage>();
