@@ -1,5 +1,6 @@
 import { IStepChain } from "./step-chain.interface";
 
-export interface IStepsInteractor {
+export interface IStepZero {
+    maxParallelization: number;
     children: IStepChain[];
 }

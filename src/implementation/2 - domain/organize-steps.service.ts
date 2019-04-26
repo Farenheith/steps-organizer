@@ -5,8 +5,7 @@ import { IOrganizeStepsService } from "../../interfaces/2 - domain/organize-step
 import { injectable, inject } from "inversify";
 import * as joi from "joi";
 import { IStepChain } from "../../interfaces/2 - domain/models/step-chain.interface";
-import { IStepsInteractor as IStepZero } from "../../interfaces/2 - domain/models/step-interactor.interface";
-import { ArrayHelper } from "base-ddd";
+import { IStepZero } from "../../interfaces/2 - domain/models/step-zero.interface";
 
 @injectable()
 export class OrganizeStepsService extends BaseService<IWorkResume, IStepZero>
@@ -21,28 +20,37 @@ export class OrganizeStepsService extends BaseService<IWorkResume, IStepZero>
     async proceed(data: IWorkResume): Promise<IStepZero | null> {
         const children:IStepChain[] = [];
         const stepChains: { [x: string]: IStepChain } = {};
-        await ArrayHelper.forEachAsync(data.recipes, async (recipe, index) => {
-            for (let i = 0; i < recipe.steps.length; i++) {
-                const step = recipe.steps[i];
-                const stepChain = this.getStepChain(step, stepChains);
-                //define dependencies
-                if (step.dependencies && step.dependencies.length > 0) {
-                    step.dependencies.forEach(id => {
-                        const parent = stepChains[id];
-                        if (!parent) {
-                            this.message(`Cadeia de passos mal definida! Verifique a receita ${index + 1}`, `invalidOrder`);
-                            return false;
-                        }
-                        parent.children.push(stepChain);
-                        stepChain.parents.push(parent);
-                    });
-                } else {
-                    children.push(stepChain);
+        await (() => {
+            for (let index = 0; index < data.recipes.length; index++) {
+                const recipe = data.recipes[index];
+
+                for (let i = 0; i < recipe.steps.length; i++) {
+                    const step = recipe.steps[i];
+                    const stepChain = this.getStepChain(step, stepChains);
+                    //define dependencies
+                    if (step.dependencies && step.dependencies.length > 0) {
+                        step.dependencies.forEach(id => {
+                            const parent = stepChains[id];
+                            if (!parent) {
+                                this.message(`Cadeia de passos mal definida! Verifique a receita ${index + 1}`, `invalidOrder`);
+                                return false;
+                            }
+                            parent.children.push(stepChain);
+                            stepChain.parents.push(parent);
+                            if (stepChain.startTime < parent.endTime) {
+                                stepChain.startTime = parent.endTime;
+                                stepChain.endTime = stepChain.startTime + stepChain.step.duration;
+                            }
+                        });
+                    } else {
+                        stepChain.endTime = stepChain.startTime = stepChain.step.duration;
+                        children.push(stepChain);
+                    }
                 }
             }
-        });
+        })();
 
-        return { children };
+        return { children, maxParallelization: data.maxParallelization };
     }
 
     getStepChain(step: IStep, stepChains: { [x: string]: IStepChain }) {

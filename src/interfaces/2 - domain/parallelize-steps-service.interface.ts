@@ -1,7 +1,8 @@
 import { IBaseService } from "base-ddd";
 import { IPlan } from "./models/plan.interface";
 import { IRecipe } from "./models/recipe.interface";
+import { IStepZero } from "./models/step-zero.interface";
 
-export interface IParallelizeStepsService extends IBaseService<IRecipe, IPlan> {
-    proceed(recipe: IRecipe): PromiseLike<IPlan>;
+export interface IParallelizeStepsService extends IBaseService<IStepZero, IPlan> {
+    proceed(data: IStepZero): PromiseLike<IPlan>;
 }
