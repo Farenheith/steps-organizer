@@ -8,6 +8,4 @@ export interface IStep {
     readonly materials: IMaterial[];
     readonly type: StepTypeEnum;
     readonly duration: number;
-    result?: IMaterial;
-    startTime?: number;
 }

@@ -1,11 +1,9 @@
 import "jasmine";
 import "reflect-metadata";
 import { ParallelizeStepsService } from "../../src/implementation/2 - domain/parallelize-steps.service"
-import { IParallelizeStepsService } from "../../src/interfaces/2 - domain/parallelize-steps-service.interface";
-import { IWorkResume } from "../../src/interfaces/2 - domain/models/work-resume.interface";
-import { IMaterial } from "../../src/interfaces/2 - domain/models/material.interface";
-import { IStep } from "../../src/interfaces/2 - domain/models/step.interface";
-import { IRecipe } from "../../src/interfaces/2 - domain/models/recipe.interface";
+import { IStepChain } from "../../src/interfaces/2 - domain/models/step-chain.interface";
+import { StepTypeEnum } from "../../src/interfaces/2 - domain/models/enums/step-type.enum";
+import { IStepZero } from "../../src/interfaces/2 - domain/models/step-zero.interface";
 
 describe("ParallelizeStepsService", () => {
     it("proceed: ok", async () => {
@@ -28,89 +26,154 @@ describe("ParallelizeStepsService", () => {
         //Arrange
         const target = new ParallelizeStepsService({} as any, {} as any, {} as any);
 
-        //Act
-        const result = await target.getStages({ steps:[
-            {
-                id: "a",
-                startTime: 0
-            } as any,
-            {
-                id: "b",
-                startTime: 0
+        //First workflow
+        const chain1:IStepChain = {
+            step: {
+                description: "First step",
+                dependencies: [],
+                duration: 1,
+                id: "STEP1",
+                type: StepTypeEnum.Intervention,
+                materials: []
             },
-            {
-                id: "c",
-                startTime: 1
+            children: [],
+            parents: [],
+            endTime: 1,
+            startTime: 0
+        };
+        const chain2:IStepChain = {
+            step: {
+                description: "Final step",
+                dependencies: [ "STEP1" ],
+                duration: 2,
+                id: "STEP2",
+                type: StepTypeEnum.Intervention,
+                materials: []
             },
-            {
-                id: "d",
-                startTime: 2
+            children: [],
+            parents: [ chain1 ],
+            endTime: 3,
+            startTime: 1
+        };
+        chain1.children.push(chain2);
+
+        //Second workflow
+        const chain1_2:IStepChain = {
+            step: {
+                description: "First step 2",
+                dependencies: [],
+                duration: 1,
+                id: "STEP1_2",
+                type: StepTypeEnum.Intervention,
+                materials: []
             },
-            {
-                id: "e",
-                startTime: 3
+            children: [],
+            parents: [],
+            endTime: 1,
+            startTime: 0
+        };
+        const chain2_2:IStepChain = {
+            step: {
+                description: "Second step 2",
+                dependencies: [ "STEP1_2" ],
+                duration: 2,
+                id: "STEP2_2",
+                type: StepTypeEnum.Intervention,
+                materials: []
             },
-            {
-                id: "f",
-                startTime: 3 
+            children: [],
+            parents: [ chain1 ],
+            endTime: 3,
+            startTime: 1
+        };
+        const chain3_2:IStepChain = {
+            step: {
+                description: "Final step 2",
+                dependencies: [ "STEP2_2" ],
+                duration: 2,
+                id: "STEP3_2",
+                type: StepTypeEnum.Intervention,
+                materials: []
             },
-            {
-                id: "g",
-                startTime: 3 
-            }
-        ],
-        results: "RESULTS" as any,
-        description: "DESCRIPTION",
-        name: "NAME" });
+            children: [],
+            parents: [ chain1 ],
+            endTime: 5,
+            startTime: 3
+        };
+        chain1.children.push(chain2);
+        chain1_2.children.push(chain2_2);
+        chain2_2.children.push(chain3_2);
 
         //Assert
-        expect(result).toEqual([ {
-                stageNumber: 1,
+        const data:IStepZero = {
+            children: [ chain1, chain1_2 ],
+            maxParallelization: 2,
+            results: [ "RESULT1" as any, "RESULT2" ]
+        }
+
+        //Act
+        const result = await target.getStages(data);
+
+        //Assert
+        expect(result).toEqual([
+            {
+                stageNumber: 0,
                 startTime: 0,
-                steps: [ {
-                        id: "a",
-                        startTime: 0
-                    } as any,
-                    {
-                        id: "b",
-                        startTime: 0
-                    }
-                ]
-            }, {
-                stageNumber: 2,
-                startTime: 1,
-                steps: [ {
-                        id: "c",
-                        startTime: 1
-                    }
-                ]
-            }, {
-                stageNumber: 3,
-                startTime: 2,
                 steps: [
                     {
-                        id: "d",
-                        startTime: 2
+                        description: "First step",
+                        dependencies: [],
+                        duration: 1,
+                        id: "STEP1",
+                        type: StepTypeEnum.Intervention,
+                        materials: []
+                    },
+                    {
+                        description: "First step 2",
+                        dependencies: [],
+                        duration: 1,
+                        id: "STEP1_2",
+                        type: StepTypeEnum.Intervention,
+                        materials: []
                     }
                 ]
-            }, {
-                stageNumber: 4,
+            },
+            {
+                stageNumber: 1,
+                startTime: 1,
+                steps: [
+                    {
+                        description: "Final step",
+                        dependencies: [ "STEP1" ],
+                        duration: 2,
+                        id: "STEP2",
+                        type: StepTypeEnum.Intervention,
+                        materials: []
+                    },
+                    {
+                        description: "Second step 2",
+                        dependencies: [ "STEP1_2" ],
+                        duration: 2,
+                        id: "STEP2_2",
+                        type: StepTypeEnum.Intervention,
+                        materials: []
+                    }
+                ]
+            },
+            {
+                stageNumber: 2,
                 startTime: 3,
                 steps: [
                     {
-                        id: "e",
-                        startTime: 3
-                    },
-                    {
-                        id: "f",
-                        startTime: 3 
-                    },
-                    {
-                        id: "g",
-                        startTime: 3 
+                        description: "Final step 2",
+                        dependencies: [ "STEP2_2" ],
+                        duration: 2,
+                        id: "STEP3_2",
+                        type: StepTypeEnum.Intervention,
+                        materials: []
                     }
                 ]
             }
-            ] as any);
+        ]);
     });
 });

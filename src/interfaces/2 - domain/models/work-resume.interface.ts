@@ -1,6 +1,6 @@
-import { IRecipe } from "./recipe.interface";
+import { IWorkflow } from "./workflow.interface";
 
 export interface IWorkResume {
     maxParallelization: number;
-    recipes: IRecipe[];
+    workflows: IWorkflow[];
 }
