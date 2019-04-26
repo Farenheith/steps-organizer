@@ -34,28 +34,30 @@ export class ParallelizeStepsService extends BaseService<IStepZero, IPlan> imple
             };
             stages.push(stage);
 
-            // Distribuindo workers, limitando por máxima paralelização e quantidade de passos disponíveis
+            // Distributing workers, limiing by maxParallelization and available nexts steps
             while (count < data.maxParallelization && count < nexts.length) {
                 const chain = nexts.pop()!;
                 stage.steps.push(chain.step);
                 reference[chain.step.id] = chain;
-                //Adiciona já ordenando decrescente pelo endTime
+                //Adding in the working array maitaining the sorting (by StartTimne, desc)
                 await insert(chain, working);
                 count++;
             }
 
-            // Atualizando workers disponíveis ao final do processo
+            // Determining the nexts steps from this point
             stage.steps.forEach(step => {
                 const current = reference[step.id];
                 this.addNexts(nexts, current.children);
             });
 
-            //Verificando quais workers terão terminado o serviço no próximo estágio
+            // Checking which step will end sooner, so the startTime of the next stage can be determined 
             const pivot = working.pop()!;
+            // For the next step, at least one worker will be available
+            count--;
             startTime = pivot.endTime;
             while (working.length > 0 && working[working.length - 1].endTime == pivot.endTime) {
                 working.pop();
-                //Para cada worker que terminará no começo do próximo estágio, um worker é liberado do total de ativos
+                //For each step the will end simultaneously with the pivot step, one worker more will be available
                 count--;
             }
         }
