@@ -16,15 +16,15 @@ export class ParallelizeStepsService extends BaseService<IStepZero, IPlan> imple
     }
 
     async proceed(data: IStepZero): Promise<IPlan> {
-        const result:IPlan = {
+        const result:IPlan = {...await this.getStages(data),
+            ...{
             results: data.results,
-            stages: await this.getStages(data)
-        };
+        }};
 
         return result;
     }
 
-    async getStages(data: IStepZero): Promise<IStage[]> {
+    async getStages(data: IStepZero): Promise<{ stages: IStage[], endTime:number }> {
         const stages:IStage[] = [];
         let stageNumber = -1;
         let startTime = 0;
@@ -77,7 +77,19 @@ export class ParallelizeStepsService extends BaseService<IStepZero, IPlan> imple
             }
         } while (nexts.length > 0 || working.length > 0 || sleepers.length > 0);
 
-        return stages;
+        const result = {
+            stages,
+            endTime: 0
+        };
+        const lastStage = result.stages[result.stages.length - 1];
+        lastStage.steps.forEach(step => {
+            const candidate = lastStage.startTime + step.duration;
+            if (result.endTime < candidate) {
+                result.endTime = candidate;
+            }
+        })
+
+        return result;
     }
 
     async choosePivot(working: IStepChain[], nexts: LinkedList, sleepers: LinkedList) {
