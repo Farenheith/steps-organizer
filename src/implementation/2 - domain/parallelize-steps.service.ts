@@ -26,7 +26,7 @@ export class ParallelizeStepsService extends BaseService<IStepZero, IPlan> imple
 
     async getStages(data: IStepZero): Promise<{ stages: IStage[], endTime:number }> {
         const stages:IStage[] = [];
-        let stageNumber = -1;
+        let stageNumber = 0;
         let startTime = 0;
         let workerNro = 0;
         let working:IStepChain[] = [];
@@ -104,54 +104,49 @@ export class ParallelizeStepsService extends BaseService<IStepZero, IPlan> imple
         return result;
     }
 
-    async choosePivot(working: IStepChain[], nexts: LinkedList, sleepers: LinkedList, max: number, i?: number) {
-        i = i || working.length - 1;
+    async choosePivot(working: IStepChain[], nexts: LinkedList, sleepers: LinkedList, occupied: number) {
+        let i = working.length - 1;
         let free = 0;
         let node: IStepChain | undefined;
         do {
             let pivotCandidate = working[i];
             if (!pivotCandidate.concluded) {
                 pivotCandidate.concluded = true;
-                if (pivotCandidate.step.type == StepTypeEnum.Intervention) {
+                if (free < occupied && pivotCandidate.step.type == StepTypeEnum.Intervention) {
                     free++;
                 }
-                const result = await this.addNexts(nexts, sleepers, pivotCandidate.children);
-
-                if (result.remaining == 0) {
-                    working.splice(i, 1); //Remove node because it doesn't need to be revisited
-                    i--;
-                }
-                if (result.hasAdded) {
-                    node = pivotCandidate; //Returns node which reproduced new nexts ocurrences
-                    break;
-                }
             }
+            const result = await this.addNexts(nexts, sleepers, pivotCandidate.children);
+            working.pop(); //Remove node because it doesn't need to be revisited
             i--;
-        } while (i >= 0 && free < max);
+            if (result.hasAdded) {
+                node = pivotCandidate; //Returns node which reproduced new nexts ocurrences
+                break;
+            }
+        } while (i >= 0);
 
         if (node) {
             if (node.step.type == StepTypeEnum.Waiting) { //Check if there is an intervention node in execution
-                const result = await this.choosePivot(working, nexts, sleepers, max - free, i);
-                if (result.node) {
-                    node = result.node;
+                if (working.length > 0) {
+                    const result = await this.choosePivot(working, nexts, sleepers, occupied);
+                    if (result.node) {
+                        node = result.node;
+                    }
+                    free += result.free;
                 }
-                free += result.free;
-            } else if (free < max) {
-                i--;
+            } else {
                 while (i >= 0 && working[i].endTime == node!.endTime) {
                     const chain = working[i];
                     if (!chain.concluded) {
                         chain.concluded = true;
                         //For each step the will end simultaneously with the pivot step, one worker more will be available
-                        if (chain.step.type == StepTypeEnum.Intervention) {
+                        if (free < occupied && chain.step.type == StepTypeEnum.Intervention) {
                             free++;
                         }
                     }
                     // Determining the nexts steps from this point
-                    if ((await this.addNexts(nexts, sleepers, chain.children)).remaining == 0) {
-                        working.slice(i, 1);
-                        i--;
-                    }
+                    await this.addNexts(nexts, sleepers, chain.children);
+                    working.pop();
                     i--;
                 }
             }
