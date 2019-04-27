@@ -18,13 +18,13 @@ export class LinkedList {
         this.reference[item.step.id] = item;
     }
 
-    shift() {
-        const node = this.firstNode;
+    pop() {
+        const node = this.lastNode;
         if (node) {
-            this.firstNode = node.next;
+            this.lastNode = node.previous;
             this.length--;
             if (this.length == 0) {
-                this.lastNode = undefined;
+                this.firstNode = undefined;
             }
             return node.item;
         }

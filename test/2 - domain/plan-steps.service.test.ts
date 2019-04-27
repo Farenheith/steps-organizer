@@ -15,7 +15,7 @@ describe("PlanStepsService", () => {
         return testCase(case1.input, case1.expect);
     });
 
-    it("do: ok case 2", () => {
+    fit("do: ok case 2", () => {
         return testCase(case2.input, case2.expect);
     });
 
@@ -350,11 +350,6 @@ const case2 = {
         maxParallelization: 2,
     },
     expect: {
-        results: [
-            "RESULT1" as any,
-            "RESULT2"
-        ],
-        endTime: 37,
         stages: [
             {
                 stageNumber: 0,
@@ -495,13 +490,7 @@ const case2 = {
                         id: "STEP3.1",
                         type: 0,
                         materials: []
-                    }
-                ]
-            },
-            {
-                stageNumber: 8,
-                startTime: 19,
-                steps: [
+                    },
                     {
                         description: "Third step",
                         dependencies: [
@@ -515,8 +504,8 @@ const case2 = {
                 ]
             },
             {
-                stageNumber: 9,
-                startTime: 20,
+                stageNumber: 8,
+                startTime: 19,
                 steps: [
                     {
                         description: "Third step",
@@ -531,8 +520,8 @@ const case2 = {
                 ]
             },
             {
-                stageNumber: 10,
-                startTime: 24,
+                stageNumber: 9,
+                startTime: 23,
                 steps: [
                     {
                         description: "Final step 2",
@@ -559,8 +548,8 @@ const case2 = {
                 ]
             },
             {
-                stageNumber: 11,
-                startTime: 25,
+                stageNumber: 10,
+                startTime: 24,
                 steps: [
                     {
                         description: "Third step",
@@ -575,8 +564,8 @@ const case2 = {
                 ]
             },
             {
-                stageNumber: 12,
-                startTime: 32,
+                stageNumber: 11,
+                startTime: 31,
                 steps: [
                     {
                         description: "Third step",
@@ -591,8 +580,8 @@ const case2 = {
                 ]
             },
             {
-                stageNumber: 13,
-                startTime: 35,
+                stageNumber: 12,
+                startTime: 34,
                 steps: [
                     {
                         description: "Fourth step",
@@ -623,8 +612,8 @@ const case2 = {
                 ]
             },
             {
-                stageNumber: 14,
-                startTime: 36,
+                stageNumber: 13,
+                startTime: 35,
                 steps: [
                     {
                         description: "Final step",
@@ -642,6 +631,11 @@ const case2 = {
                     }
                 ]
             }
+        ],
+        endTime: 36,
+        results: [
+            "RESULT1" as any,
+            "RESULT2"
         ]
     }
 }
