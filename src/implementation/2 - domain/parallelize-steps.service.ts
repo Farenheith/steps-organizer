@@ -5,6 +5,7 @@ import { IStepZero } from "../../interfaces/2 - domain/models/step-zero.interfac
 import { IStepChain } from "../../interfaces/2 - domain/models/step-chain.interface";
 import { injectable, inject } from "inversify";
 import { StepTypeEnum } from "../../interfaces/2 - domain/models/enums/step-type.enum";
+import { LinkedList } from "./helpers/linked-list";
 
 @injectable()
 export class ParallelizeStepsService extends BaseService<IStepZero, IPlan> implements IParallelizeStepsService {
@@ -28,10 +29,9 @@ export class ParallelizeStepsService extends BaseService<IStepZero, IPlan> imple
         let stageNumber = -1;
         let startTime = 0;
         let count = 0;
-        let reference: { [x: string]: IStepChain} = {};
         let working:IStepChain[] = [];
-        const nexts:IStepChain[] = [];
-        const sleepers:IStepChain[] = []
+        const nexts = new LinkedList();
+        const sleepers = new LinkedList();
 
         this.addNexts(nexts, sleepers, data.children);
         do {
@@ -47,7 +47,6 @@ export class ParallelizeStepsService extends BaseService<IStepZero, IPlan> imple
             while (count < data.maxParallelization && nexts.length > 0) {
                 const chain = nexts.shift()!;
                 stage.steps.push(chain.step);
-                reference[chain.step.id] = chain;
                 //Adding in the working array maitaining the sorting (by StartTimne, desc)
                 await insert(chain, working);
                 count++;
@@ -57,7 +56,6 @@ export class ParallelizeStepsService extends BaseService<IStepZero, IPlan> imple
             while (sleepers.length > 0) {
                 const chain = sleepers.shift()!;
                 stage.steps.push(chain.step);
-                reference[chain.step.id] = chain;
                 //Adding in the working array maitaining the sorting (by StartTimne, desc)
                 await insert(chain, working);
             }
@@ -82,7 +80,7 @@ export class ParallelizeStepsService extends BaseService<IStepZero, IPlan> imple
         return stages;
     }
 
-    async choosePivot(working:IStepChain[], nexts:IStepChain[], sleepers:IStepChain[]) {
+    async choosePivot(working: IStepChain[], nexts: LinkedList, sleepers: LinkedList) {
         let pivotCandidate = working.shift()!
         pivotCandidate.concluded = true;
 
@@ -94,16 +92,15 @@ export class ParallelizeStepsService extends BaseService<IStepZero, IPlan> imple
         return pivotCandidate;
     }
 
-    async addNexts(nexts: IStepChain[], sleepers: IStepChain[], children: IStepChain[]) {
+    async addNexts(nexts: LinkedList, sleepers: LinkedList, children: IStepChain[]) {
         let result = false;
         for (let i = 0; i < children.length; i++) {
             const child = children[i];
             if (!child.parents || child.parents.every(x => x.concluded as boolean)) {
                 const target = child.step.type === StepTypeEnum.Waiting ? sleepers : nexts;
-                if (target.length == 0 || target.findIndex(x => x.step.id === child.step.id) < 0) {
+                if (!target.get(child.step.id)) {
                     target.push(child);
                     result = true;
-                    // await insert(chain, target);
                 }    
             }
         }
@@ -114,7 +111,7 @@ export class ParallelizeStepsService extends BaseService<IStepZero, IPlan> imple
     }
 }
 
-
+/// O(log(n))
 async function locationOf(element: IStepChain, array: IStepChain[]) {
     let start = 0;
     let end = array.length;
@@ -141,6 +138,7 @@ async function locationOf(element: IStepChain, array: IStepChain[]) {
     return pivot;
 }
 
+/// O(n) + O(log(n))
 export async function insert(element: IStepChain, array: IStepChain[]) {
     array.splice((await locationOf(element, array)), 0, element);
     return array;
