@@ -66,7 +66,7 @@ export class ParallelizeStepsService extends BaseService<IStepZero, IPlan> imple
             count--;
             startTime = pivot.endTime;
             while (working.length > 0 && working[0].endTime == pivot.endTime) {
-                const chain = working.shift()!;
+                const chain = working.pop()!;
                 chain.concluded = true;
                 // Determining the nexts steps from this point
                 this.addNexts(nexts, sleepers, chain.children);
@@ -81,11 +81,11 @@ export class ParallelizeStepsService extends BaseService<IStepZero, IPlan> imple
     }
 
     async choosePivot(working: IStepChain[], nexts: LinkedList, sleepers: LinkedList) {
-        let pivotCandidate = working.shift()!
+        let pivotCandidate = working.pop()!
         pivotCandidate.concluded = true;
 
         while (!await this.addNexts(nexts, sleepers, pivotCandidate.children) && working.length > 0) {
-            pivotCandidate = working.shift()!
+            pivotCandidate = working.pop()!
             pivotCandidate.concluded = true;
         }
 
@@ -120,7 +120,7 @@ async function locationOf(element: IStepChain, array: IStepChain[]) {
         var pivot = ~~(start + (end - start) / 2);
 
         if (end-start == 1) {
-            if (array[pivot].endTime <= element.endTime)
+            if (array[pivot].endTime > element.endTime)
                 pivot++;
                 break;
         } else if (end-start < 1 || array[pivot].endTime === element.endTime) {
@@ -128,7 +128,7 @@ async function locationOf(element: IStepChain, array: IStepChain[]) {
             break;
         }
 
-        if (array[pivot].endTime < element.endTime) {
+        if (array[pivot].endTime >= element.endTime) {
             start = pivot;
         } else {
             end = pivot;

@@ -179,17 +179,17 @@ describe("ParallelizeStepsService", () => {
 
     
 
-    it("insert: ok (last)", async () => {
+    it("insert: ok (first)", async () => {
         //Arrange
         const array = [
             {
-                endTime: 1
+                endTime: 3
             },
             {
                 endTime: 2
             },
             {
-                endTime: 3
+                endTime: 1
             }
         ] as any[];
         const element = {
@@ -202,31 +202,31 @@ describe("ParallelizeStepsService", () => {
         //Assert
         expect(result).toEqual([
             {
-                endTime: 1
-            },
-            {
-                endTime: 2
+                endTime: 4
             },
             {
                 endTime: 3
             },
             {
-                endTime: 4
+                endTime: 2
+            },
+            {
+                endTime: 1
             }
         ] as any);
     });
 
-    it("insert: ok (first)", async () => {
+    it("insert: ok (last)", async () => {
         //Arrange
         const array = [
             {
-                endTime: 1
+                endTime: 3
             },
             {
                 endTime: 2
             },
             {
-                endTime: 3
+                endTime: 1
             }
         ] as any[];
         const element = {
@@ -239,16 +239,16 @@ describe("ParallelizeStepsService", () => {
         //Assert
         expect(result).toEqual([
             {
-                endTime: 0
-            },
-            {
-                endTime: 1
+                endTime: 3
             },
             {
                 endTime: 2
             },
             {
-                endTime: 3
+                endTime: 1
+            },
+            {
+                endTime: 0
             }
         ] as any);
     });
