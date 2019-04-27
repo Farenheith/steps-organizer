@@ -28,7 +28,7 @@ export class ParallelizeStepsService extends BaseService<IStepZero, IPlan> imple
         const stages:IStage[] = [];
         let stageNumber = -1;
         let startTime = 0;
-        let count = 0;
+        let workerNro = 0;
         let working:IStepChain[] = [];
         const nexts = new LinkedList();
         const sleepers = new LinkedList();
@@ -44,12 +44,12 @@ export class ParallelizeStepsService extends BaseService<IStepZero, IPlan> imple
             stages.push(stage);
 
             // Distributing workers, limiting by maxParallelization and available nexts steps
-            while (count < data.maxParallelization && nexts.length > 0) {
+            while (workerNro < data.maxParallelization && nexts.length > 0) {
                 const chain = nexts.shift()!;
                 stage.steps.push(chain.step);
                 //Adding in the working array maitaining the sorting (by StartTimne, desc)
                 await insert(chain, working);
-                count++;
+                workerNro++;
             }
 
             // Executing sleepers, who doesn't need a worker to advance
@@ -63,7 +63,7 @@ export class ParallelizeStepsService extends BaseService<IStepZero, IPlan> imple
             // Checking which step will end sooner, so the startTime of the next stage can be determined
             const pivot = await this.choosePivot(working, nexts, sleepers);
             // For the next step, at least one worker will be available
-            count--;
+            workerNro--;
             startTime = pivot.endTime;
             while (working.length > 0 && working[0].endTime == pivot.endTime) {
                 const chain = working.pop()!;
@@ -72,7 +72,7 @@ export class ParallelizeStepsService extends BaseService<IStepZero, IPlan> imple
                 this.addNexts(nexts, sleepers, chain.children);
                 //For each step the will end simultaneously with the pivot step, one worker more will be available
                 if (chain.step.type == StepTypeEnum.Intervention) {
-                    count--;
+                    workerNro--;
                 }
             }
         } while (nexts.length > 0 || working.length > 0 || sleepers.length > 0);
