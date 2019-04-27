@@ -3,6 +3,7 @@ import { IStep } from "./step.interface";
 
 export interface IPlan {
     stages: IStage[];
+    endTime: number;
     results: IMaterial[];
 }
 

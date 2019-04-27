@@ -115,6 +115,7 @@ const case1 = {
     },
     expect: {
         results: [ "RESULT1" as any, "RESULT2" ],
+        endTime: 5,
         stages: [
             {
                 stageNumber: 0,
@@ -353,6 +354,7 @@ const case2 = {
             "RESULT1" as any,
             "RESULT2"
         ],
+        endTime: 15,
         stages: [
             {
                 stageNumber: 0,

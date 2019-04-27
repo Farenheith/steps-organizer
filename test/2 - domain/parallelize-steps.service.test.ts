@@ -9,7 +9,7 @@ describe("ParallelizeStepsService", () => {
     it("proceed: ok", async () => {
         //Arrange
         const target = new ParallelizeStepsService({} as any, {} as any);
-        spyOn(target, "getStages").and.returnValue(Promise.resolve("EXPECTED_STAGES" as any));
+        spyOn(target, "getStages").and.returnValue(Promise.resolve({ stages: "EXPECTED_STAGES" } as any));
 
         //Act
         const result = await target.proceed({ results: "RESULTS" } as any);
@@ -115,7 +115,8 @@ describe("ParallelizeStepsService", () => {
         const result = await target.getStages(data);
 
         //Assert
-        expect(result).toEqual([
+        expect(result).toEqual({
+            stages: [
             {
                 stageNumber: 0,
                 startTime: 0,
@@ -174,7 +175,7 @@ describe("ParallelizeStepsService", () => {
                     }
                 ]
             }
-        ]);
+        ], endTime: 5});
     });
 
     
