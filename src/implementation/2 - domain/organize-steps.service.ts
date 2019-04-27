@@ -73,6 +73,8 @@ export class OrganizeStepsService extends BaseService<IWorkResume, IStepZero>
         return {
             name: joi.string().min(3),
             descriptiosn: joi.string(),
+            workflows: joi.array(),
+            maxParallelization: joi.number().positive().integer()
         }
     }
 }

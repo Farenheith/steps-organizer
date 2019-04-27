@@ -4,6 +4,8 @@ import { TYPES } from "./types";
 import { OrganizeStepsService } from "./implementation/2 - domain/organize-steps.service";
 import { IParallelizeStepsService } from "./interfaces/2 - domain/parallelize-steps-service.interface";
 import { ParallelizeStepsService } from "./implementation/2 - domain/parallelize-steps.service";
+import { IPlanStepsService } from "./interfaces/2 - domain/plan-steps-service.interface";
+import { PlanStepsService } from "./implementation/2 - domain/plan-steps.service";
 
 export class AppContainer extends BaseAppContainer<ISettings> {
     constructor() {
@@ -17,6 +19,8 @@ export class AppContainer extends BaseAppContainer<ISettings> {
             .to(OrganizeStepsService);
         this.bind<IParallelizeStepsService>(TYPES.domainServices.IParallelizeStepsService)
             .to(ParallelizeStepsService);
+        this.bind<IPlanStepsService>(TYPES.domainServices.IPlanStepsService)
+            .to(PlanStepsService);
     }
 
     registerApplications(): void { }

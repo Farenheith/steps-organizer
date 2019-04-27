@@ -1,10 +1,18 @@
-import { BaseService } from "base-ddd";
+import { BaseService, BASE_TYPES, INotificationService, IRequestInfo } from "base-ddd";
 import { IPlan, IStage } from "../../interfaces/2 - domain/models/plan.interface";
 import { IParallelizeStepsService } from "../../interfaces/2 - domain/parallelize-steps-service.interface";
 import { IStepZero } from "../../interfaces/2 - domain/models/step-zero.interface";
 import { IStepChain } from "../../interfaces/2 - domain/models/step-chain.interface";
+import { injectable, inject } from "inversify";
 
+@injectable()
 export class ParallelizeStepsService extends BaseService<IStepZero, IPlan> implements IParallelizeStepsService {
+    constructor(
+            @inject(BASE_TYPES.domainServices.INotificationService) notifications: INotificationService,
+            @inject(BASE_TYPES.domainModels.IRequestInfo) requestInfo: IRequestInfo) {
+        super("ParallelizeStepsService", notifications, requestInfo);
+    }
+
     async proceed(data: IStepZero): Promise<IPlan> {
         const result:IPlan = {
             results: data.results,

@@ -13,99 +13,63 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const base_ddd_1 = require("base-ddd");
-const bluebird_1 = require("bluebird");
 const inversify_1 = require("inversify");
-const types_1 = require("../../types");
+const joi = require("joi");
 let OrganizeStepsService = class OrganizeStepsService extends base_ddd_1.BaseService {
-    constructor(notifications, settings, parallelize) {
+    constructor(notifications, settings) {
         super("OrganizeSteps", notifications, settings);
-        this.parallelize = parallelize;
     }
     async proceed(data) {
-        const description = "Receita resultante";
-        const results = new Array();
-        const recipeCount = data.recipes.length;
-        const iterators = new Array();
-        const name = await this.setup(data, results, iterators);
-        await this.setStartTimes(recipeCount, iterators, data.recipes);
-        const steps = await this.joinAndSort(data);
-        return this.parallelize.proceed({ name, description, results, steps });
-    }
-    setup(data, result, iterators) {
-        return bluebird_1.promisify(() => {
-            let first = true;
-            let name = "";
-            data.recipes.forEach(x => {
-                if (first) {
-                    first = false;
+        const children = [];
+        const stepChains = {};
+        const results = [];
+        for (let index = 0; index < data.workflows.length; index++) {
+            const workflow = data.workflows[index];
+            workflow.results.forEach(x => results.push(x));
+            for (let i = 0; i < workflow.steps.length; i++) {
+                const step = workflow.steps[i];
+                const stepChain = this.getStepChain(step, stepChains);
+                //define dependencies
+                if (step.dependencies && step.dependencies.length > 0) {
+                    for (let d = 0; d < step.dependencies.length; d++) {
+                        const parent = stepChains[step.dependencies[d]];
+                        if (!parent) {
+                            this.message(`Cadeia de passos mal definida! Verifique a receita ${index + 1}`, `invalidOrder`);
+                            return null;
+                        }
+                        parent.children.push(stepChain);
+                        stepChain.parents.push(parent);
+                        if (stepChain.startTime < parent.endTime) {
+                            stepChain.startTime = parent.endTime;
+                            stepChain.endTime = stepChain.startTime + stepChain.step.duration;
+                        }
+                    }
                 }
                 else {
-                    name += " / ";
+                    stepChain.endTime = stepChain.startTime + stepChain.step.duration;
+                    children.push(stepChain);
                 }
-                name += x.name;
-                Object.assign(result, x.results);
-                iterators.push(x.steps.entries());
-            });
-            return name;
-        })();
-    }
-    joinAndSort(data) {
-        return bluebird_1.promisify(() => {
-            const result = new Array();
-            data.recipes.forEach(x => Object.assign(result, x.steps));
-            return result.sort((a, b) => b.startTime < a.startTime ? 1 : 0);
-        })();
-    }
-    async setStartTime(currentStep, recipe, dependencies) {
-        if (!dependencies || dependencies.length == 0) {
-            return 0;
+            }
         }
-        if (currentStep.startTime) {
-            this.message(`passo ${currentStep.id} processado duas vezes! Verifique a cadeia de dependências`, 'invalidDependencies');
-            return;
-        }
-        currentStep.startTime = 0;
-        await base_ddd_1.ArrayHelper.forEachAsync(dependencies, async (x) => {
-            const index = await recipe.steps.findIndex(s => s.id === x);
-            if (index < 0) {
-                this.message(`passo ${x} não encontrado!`, 'registerNotFound');
-                return true;
-            }
-            const step = recipe.steps[index];
-            if (!step.startTime) {
-                this.message(`Passo ${currentStep.id} está sendo processado antes de sua dependência ${x}`, 'invalidOrder', `steps[${index}].dependencies`);
-                return true;
-            }
-            const resultCandidate = step.duration + step.startTime;
-            if (currentStep.startTime < resultCandidate) {
-                currentStep.startTime = resultCandidate;
-            }
-        });
+        return { children, maxParallelization: data.maxParallelization, results };
     }
-    async setStartTimes(recipeCount, iterators, recipes) {
-        do {
-            const lastValues = new Array(recipeCount);
-            await base_ddd_1.ArrayHelper.forEachAsync(iterators, async (x, i) => {
-                lastValues[i] = x.next();
-                await this.setStartTime(lastValues[i].value[1], recipes[i], lastValues[i].value[1].dependencies);
-                return this.hasNotification();
-            });
-            if (this.hasNotification()) {
-                break;
-            }
-            const newIterators = new Array();
-            lastValues.forEach((x, i) => {
-                if (!x.done) {
-                    newIterators.push(iterators[i]);
-                }
-            });
-            iterators = newIterators;
-        } while (iterators.length > 0);
+    getStepChain(step, stepChains) {
+        let result = stepChains[step.id];
+        if (!result) {
+            stepChains[step.id] = result = {
+                step,
+                children: [],
+                parents: [],
+                endTime: 0,
+                startTime: 0
+            };
+        }
+        return result;
     }
     getJoi() {
         return {
-            name: this.joi().string().min(3),
-            descriptiosn: this.joi().string(),
+            name: joi.string().min(3),
+            descriptiosn: joi.string(),
         };
     }
 };
@@ -113,7 +77,6 @@ OrganizeStepsService = __decorate([
     inversify_1.injectable(),
     __param(0, inversify_1.inject(base_ddd_1.BASE_TYPES.domainServices.INotificationService)),
     __param(1, inversify_1.inject(base_ddd_1.BASE_TYPES.domainModels.IRequestInfo)),
-    __param(2, inversify_1.inject(types_1.TYPES.domainServices.IParallelizeStepsService)),
-    __metadata("design:paramtypes", [Object, Object, Object])
+    __metadata("design:paramtypes", [Object, Object])
 ], OrganizeStepsService);
 exports.OrganizeStepsService = OrganizeStepsService;
