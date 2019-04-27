@@ -354,7 +354,7 @@ const case2 = {
             "RESULT1" as any,
             "RESULT2"
         ],
-        endTime: 15,
+        endTime: 37,
         stages: [
             {
                 stageNumber: 0,
@@ -394,7 +394,7 @@ const case2 = {
             },
             {
                 stageNumber: 2,
-                startTime: 3,
+                startTime: 4,
                 steps: [
                     {
                         description: "First step 2",
@@ -419,7 +419,7 @@ const case2 = {
             },
             {
                 stageNumber: 3,
-                startTime: 1,
+                startTime: 5,
                 steps: [
                     {
                         description: "Second step",
@@ -435,7 +435,7 @@ const case2 = {
             },
             {
                 stageNumber: 4,
-                startTime: 5,
+                startTime: 9,
                 steps: [
                     {
                         description: "Second step 1",
@@ -452,7 +452,7 @@ const case2 = {
             },
             {
                 stageNumber: 5,
-                startTime: 5,
+                startTime: 11,
                 steps: [
                     {
                         description: "Second step 2",
@@ -468,7 +468,7 @@ const case2 = {
             },
             {
                 stageNumber: 6,
-                startTime: 3,
+                startTime: 13,
                 steps: [
                     {
                         description: "Third step",
@@ -484,7 +484,7 @@ const case2 = {
             },
             {
                 stageNumber: 7,
-                startTime: 6,
+                startTime: 16,
                 steps: [
                     {
                         description: "Third step",
@@ -500,7 +500,7 @@ const case2 = {
             },
             {
                 stageNumber: 8,
-                startTime: 8,
+                startTime: 19,
                 steps: [
                     {
                         description: "Third step",
@@ -516,7 +516,7 @@ const case2 = {
             },
             {
                 stageNumber: 9,
-                startTime: 6,
+                startTime: 20,
                 steps: [
                     {
                         description: "Third step",
@@ -532,7 +532,7 @@ const case2 = {
             },
             {
                 stageNumber: 10,
-                startTime: 9,
+                startTime: 24,
                 steps: [
                     {
                         description: "Final step 2",
@@ -560,7 +560,7 @@ const case2 = {
             },
             {
                 stageNumber: 11,
-                startTime: 10,
+                startTime: 25,
                 steps: [
                     {
                         description: "Third step",
@@ -576,7 +576,7 @@ const case2 = {
             },
             {
                 stageNumber: 12,
-                startTime: 13,
+                startTime: 32,
                 steps: [
                     {
                         description: "Third step",
@@ -592,7 +592,7 @@ const case2 = {
             },
             {
                 stageNumber: 13,
-                startTime: 9,
+                startTime: 35,
                 steps: [
                     {
                         description: "Fourth step",
@@ -624,7 +624,7 @@ const case2 = {
             },
             {
                 stageNumber: 14,
-                startTime: 14,
+                startTime: 36,
                 steps: [
                     {
                         description: "Final step",

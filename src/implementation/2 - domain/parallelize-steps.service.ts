@@ -64,7 +64,7 @@ export class ParallelizeStepsService extends BaseService<IStepZero, IPlan> imple
             const pivot = await this.choosePivot(working, nexts, sleepers);
             // For the next step, at least one worker will be available
             workerNro--;
-            startTime = pivot.endTime;
+            startTime += pivot.step.duration;
             while (working.length > 0 && working[0].endTime == pivot.endTime) {
                 const chain = working.pop()!;
                 chain.concluded = true;
