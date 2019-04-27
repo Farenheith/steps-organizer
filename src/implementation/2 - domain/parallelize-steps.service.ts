@@ -80,7 +80,7 @@ export class ParallelizeStepsService extends BaseService<IStepZero, IPlan> imple
             // For the next step, at least one worker will be available
             workerNro -= pivot.free;
             
-            if (pivot.node) {
+            if (pivot.node && pivot.node.step.type == StepTypeEnum.Intervention) {
                 startTime = pivot.node.endTime;
             } else if (minEndTime > 0) {
                 startTime = minEndTime;
@@ -128,7 +128,7 @@ export class ParallelizeStepsService extends BaseService<IStepZero, IPlan> imple
         if (node) {
             if (node.step.type == StepTypeEnum.Waiting) { //Check if there is an intervention node in execution
                 if (working.length > 0) {
-                    const result = await this.choosePivot(working, nexts, sleepers, occupied);
+                    const result = await this.choosePivot(working, nexts, sleepers, occupied - free);
                     if (result.node) {
                         node = result.node;
                     }
