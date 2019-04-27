@@ -4,6 +4,7 @@ import { AppContainer } from "../src/app-container";
 import { TYPES } from "../src/types";
 import { OrganizeStepsService } from "../src/implementation/2 - domain/organize-steps.service";
 import { ParallelizeStepsService } from "../src/implementation/2 - domain/parallelize-steps.service";
+import { PlanStepsService } from "../src/implementation/2 - domain/plan-steps.service";
 
 describe("BaseAppContainer", () => {
     it("constructor: ok", () => {
@@ -33,8 +34,9 @@ describe("BaseAppContainer", () => {
 
         //Assert
         expect(target.register).toHaveBeenCalledTimes(1);
-        expect(AppContainer.prototype.bind).toHaveBeenCalledTimes(2);
+        expect(AppContainer.prototype.bind).toHaveBeenCalledTimes(3);
         expect(mapping[TYPES.domainServices.IOrganizeStepsService.toString()]).toBe(OrganizeStepsService);
         expect(mapping[TYPES.domainServices.IParallelizeStepsService.toString()]).toBe(ParallelizeStepsService);
+        expect(mapping[TYPES.domainServices.IPlanStepsService.toString()]).toBe(PlanStepsService);
     });
 });

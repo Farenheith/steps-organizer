@@ -6,4 +6,5 @@ export interface IStepChain {
     endTime: number;
     parents: IStepChain[];
     children: IStepChain[];
+    concluded?: boolean;
 }

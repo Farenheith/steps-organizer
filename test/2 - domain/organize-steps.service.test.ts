@@ -46,23 +46,23 @@ describe("OrganizeStepsService", () => {
 
         const data: IWorkResume = {
             workflows: [ {
-                description: "Uma receita",
-                name: "Receita 1",
+                description: "A workflow",
+                name: "Workflow 1",
                 results: [ "RESULT1" as any, "RESULT2" ],
                 steps: [
                     {
-                        description: "Primeiro passo",
+                        description: "First step",
                         dependencies: [],
                         duration: 1,
-                        id: "PASSO1",
+                        id: "STEP1",
                         type: StepTypeEnum.Intervention,
                         materials: []
                     },
                     {
-                        description: "Passo final",
-                        dependencies: [ "PASSO1" ],
+                        description: "Final step",
+                        dependencies: [ "STEP1" ],
                         duration: 2,
-                        id: "PASSO2",
+                        id: "STEP2",
                         type: StepTypeEnum.Intervention,
                         materials: []
                     }
@@ -75,10 +75,10 @@ describe("OrganizeStepsService", () => {
         const result = await target.proceed(data);
         const chain1:IStepChain = {
             step: {
-                description: "Primeiro passo",
+                description: "First step",
                 dependencies: [],
                 duration: 1,
-                id: "PASSO1",
+                id: "STEP1",
                 type: StepTypeEnum.Intervention,
                 materials: []
             },
@@ -89,10 +89,10 @@ describe("OrganizeStepsService", () => {
         };
         const chain2:IStepChain = {
             step: {
-                description: "Passo final",
-                dependencies: [ "PASSO1" ],
+                description: "Final step",
+                dependencies: [ "STEP1" ],
                 duration: 2,
-                id: "PASSO2",
+                id: "STEP2",
                 type: StepTypeEnum.Intervention,
                 materials: []
             },
