@@ -113,69 +113,51 @@ describe("ParallelizeStepsService", () => {
 
         //Act
         const result = await target.getStages(data);
-
+        const json = JSON.stringify(result);
         //Assert
         expect(result).toEqual({
             stages: [
-            {
-                stageNumber: 0,
-                startTime: 0,
-                steps: [
-                    {
-                        description: "First step",
-                        dependencies: [],
-                        duration: 1,
-                        id: "STEP1",
-                        type: StepTypeEnum.Intervention,
-                        materials: []
-                    },
-                    {
-                        description: "First step 2",
-                        dependencies: [],
-                        duration: 1,
-                        id: "STEP1_2",
-                        type: StepTypeEnum.Intervention,
-                        materials: []
-                    }
-                ]
-            },
-            {
-                stageNumber: 1,
-                startTime: 1,
-                steps: [
-                    {
-                        description: "Final step",
-                        dependencies: [ "STEP1" ],
-                        duration: 2,
-                        id: "STEP2",
-                        type: StepTypeEnum.Intervention,
-                        materials: []
-                    },
-                    {
-                        description: "Second step 2",
-                        dependencies: [ "STEP1_2" ],
-                        duration: 2,
-                        id: "STEP2_2",
-                        type: StepTypeEnum.Intervention,
-                        materials: []
-                    }
-                ]
-            },
-            {
-                stageNumber: 2,
-                startTime: 3,
-                steps: [
-                    {
-                        description: "Final step 2",
-                        dependencies: [ "STEP2_2" ],
-                        duration: 2,
-                        id: "STEP3_2",
-                        type: StepTypeEnum.Intervention,
-                        materials: []
-                    }
-                ]
-            }
-        ], endTime: 5});
+                {
+                    stageNumber: 1,
+                    startTime: 0,
+                    steps: [
+                        {
+                            description: "First step 2",
+                            dependencies: [],
+                            duration: 1,
+                            id: "STEP1_2",
+                            type: 0,
+                            materials: []
+                        },
+                        {
+                            description: "First step",
+                            dependencies: [],
+                            duration: 1,
+                            id: "STEP1",
+                            type: 0,
+                            materials: []
+                        }
+                    ]
+                },
+                {
+                    stageNumber: 2,
+                    startTime: 1,
+                    steps: [
+                        {
+                            description: "Final step",
+                            dependencies: [
+                                "STEP1"
+                            ],
+                            duration: 2,
+                            id: "STEP2",
+                            type: 0,
+                            materials: []
+                        }
+                    ]
+                }
+            ],
+            endTime: 3
+        });
     });
 
     

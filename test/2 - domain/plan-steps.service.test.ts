@@ -8,7 +8,6 @@ import { IPlanStepsService } from "../../src/interfaces/2 - domain/plan-steps-se
 import { IOrganizeStepsService } from "../../src/interfaces/2 - domain/organize-steps-service.interface";
 import { PlanStepsService } from "../../src/implementation/2 - domain/plan-steps.service";
 import { IPlan } from "../../src/interfaces/2 - domain/models/plan.interface";
-import { insert } from "../../src/implementation/2 - domain/parallelize-steps.service";
 
 describe("PlanStepsService", () => {
     it("do: ok case 1", () => {
@@ -50,8 +49,6 @@ async function testCase(input: IWorkResume, expected: IPlan) {
 
     //Assert
     expect(target["notifications"].getNotifications()).toEqual([]);
-    const strResult = JSON.stringify(result);
-    const strExpected = JSON.stringify(expected);
     expect(result).toEqual(expected);
 }
 
@@ -114,67 +111,76 @@ const case1 = {
         maxParallelization: 2,
     },
     expect: {
-        results: [ "RESULT1" as any, "RESULT2" ],
-        endTime: 5,
         stages: [
             {
-                stageNumber: 0,
+                stageNumber: 1,
                 startTime: 0,
                 steps: [
-                    {
-                        description: "First step",
-                        dependencies: [],
-                        duration: 1,
-                        id: "STEP1",
-                        type: StepTypeEnum.Intervention,
-                        materials: []
-                    },
                     {
                         description: "First step 2",
                         dependencies: [],
                         duration: 1,
                         id: "STEP1_2",
-                        type: StepTypeEnum.Intervention,
-                        materials: []
-                    }
-                ]
-            },
-            {
-                stageNumber: 1,
-                startTime: 1,
-                steps: [
-                    {
-                        description: "Final step",
-                        dependencies: [ "STEP1" ],
-                        duration: 2,
-                        id: "STEP2",
-                        type: StepTypeEnum.Intervention,
+                        type: 0,
                         materials: []
                     },
                     {
-                        description: "Second step 2",
-                        dependencies: [ "STEP1_2" ],
-                        duration: 2,
-                        id: "STEP2_2",
-                        type: StepTypeEnum.Intervention,
+                        description: "First step",
+                        dependencies: [],
+                        duration: 1,
+                        id: "STEP1",
+                        type: 0,
                         materials: []
                     }
                 ]
             },
             {
                 stageNumber: 2,
+                startTime: 1,
+                steps: [
+                    {
+                        description: "Final step",
+                        dependencies: [
+                            "STEP1"
+                        ],
+                        duration: 2,
+                        id: "STEP2",
+                        type: 0,
+                        materials: []
+                    },
+                    {
+                        description: "Second step 2",
+                        dependencies: [
+                            "STEP1_2"
+                        ],
+                        duration: 2,
+                        id: "STEP2_2",
+                        type: 0,
+                        materials: []
+                    }
+                ]
+            },
+            {
+                stageNumber: 3,
                 startTime: 3,
                 steps: [
                     {
                         description: "Final step 2",
-                        dependencies: [ "STEP2_2" ],
+                        dependencies: [
+                            "STEP2_2"
+                        ],
                         duration: 2,
                         id: "STEP3_2",
-                        type: StepTypeEnum.Intervention,
+                        type: 0,
                         materials: []
                     }
                 ]
             }
+        ],
+        endTime: 5,
+        results: [
+            "RESULT1" as any,
+            "RESULT2"
         ]
     }
 }
@@ -307,6 +313,14 @@ const case2 = {
                     materials: []
                 },
                 {
+                    description: "Fourth step 2",
+                    dependencies: [ "STEP3.1", "STEP3.2", "STEP3.3" ],
+                    duration: 1,
+                    id: "STEP4.3",
+                    type: StepTypeEnum.Waiting,
+                    materials: []
+                },
+                {
                     description: "Final step",
                     dependencies: [ "STEP1", "STEP3", "STEP4", "STEP4.1", "STEP4.2" ],
                     duration: 1,
@@ -350,21 +364,56 @@ const case2 = {
         maxParallelization: 2,
     },
     expect: {
-        results: [
-            "RESULT1" as any,
-            "RESULT2"
-        ],
-        endTime: 37,
         stages: [
             {
-                stageNumber: 0,
+                stageNumber: 1,
                 startTime: 0,
                 steps: [
                     {
-                        description: "First step",
+                        description: "First step 2",
                         dependencies: [],
                         duration: 1,
-                        id: "STEP1",
+                        id: "STEP1_2",
+                        type: 0,
+                        materials: []
+                    },
+                    {
+                        description: "First step 2",
+                        dependencies: [],
+                        duration: 3,
+                        id: "STEP1.2",
+                        type: 0,
+                        materials: []
+                    }
+                ]
+            },
+            {
+                stageNumber: 2,
+                startTime: 1,
+                steps: [
+                    {
+                        description: "Second step 2",
+                        dependencies: [
+                            "STEP1_2"
+                        ],
+                        duration: 2,
+                        id: "STEP2_2",
+                        type: 0,
+                        materials: []
+                    }
+                ]
+            },
+            {
+                stageNumber: 3,
+                startTime: 3,
+                steps: [
+                    {
+                        description: "Final step 2",
+                        dependencies: [
+                            "STEP2_2"
+                        ],
+                        duration: 2,
+                        id: "STEP3_2",
                         type: 0,
                         materials: []
                     },
@@ -379,28 +428,25 @@ const case2 = {
                 ]
             },
             {
-                stageNumber: 1,
-                startTime: 1,
+                stageNumber: 4,
+                startTime: 5,
                 steps: [
                     {
-                        description: "First step 2",
-                        dependencies: [],
-                        duration: 3,
-                        id: "STEP1.2",
+                        description: "Second step 1",
+                        dependencies: [
+                            "STEP1.1",
+                            "STEP1.2"
+                        ],
+                        duration: 2,
+                        id: "STEP2.1",
                         type: 0,
                         materials: []
-                    }
-                ]
-            },
-            {
-                stageNumber: 2,
-                startTime: 4,
-                steps: [
+                    },
                     {
-                        description: "First step 2",
+                        description: "First step",
                         dependencies: [],
                         duration: 1,
-                        id: "STEP1_2",
+                        id: "STEP1",
                         type: 0,
                         materials: []
                     },
@@ -418,8 +464,8 @@ const case2 = {
                 ]
             },
             {
-                stageNumber: 3,
-                startTime: 5,
+                stageNumber: 5,
+                startTime: 6,
                 steps: [
                     {
                         description: "Second step",
@@ -434,89 +480,8 @@ const case2 = {
                 ]
             },
             {
-                stageNumber: 4,
-                startTime: 9,
-                steps: [
-                    {
-                        description: "Second step 1",
-                        dependencies: [
-                            "STEP1.1",
-                            "STEP1.2"
-                        ],
-                        duration: 2,
-                        id: "STEP2.1",
-                        type: 0,
-                        materials: []
-                    }
-                ]
-            },
-            {
-                stageNumber: 5,
-                startTime: 11,
-                steps: [
-                    {
-                        description: "Second step 2",
-                        dependencies: [
-                            "STEP1_2"
-                        ],
-                        duration: 2,
-                        id: "STEP2_2",
-                        type: 0,
-                        materials: []
-                    }
-                ]
-            },
-            {
                 stageNumber: 6,
-                startTime: 13,
-                steps: [
-                    {
-                        description: "Third step",
-                        dependencies: [
-                            "STEP2"
-                        ],
-                        duration: 2,
-                        id: "STEP3",
-                        type: 0,
-                        materials: []
-                    }
-                ]
-            },
-            {
-                stageNumber: 7,
-                startTime: 16,
-                steps: [
-                    {
-                        description: "Third step",
-                        dependencies: [
-                            "STEP2"
-                        ],
-                        duration: 3,
-                        id: "STEP3.1",
-                        type: 0,
-                        materials: []
-                    }
-                ]
-            },
-            {
-                stageNumber: 8,
-                startTime: 19,
-                steps: [
-                    {
-                        description: "Third step",
-                        dependencies: [
-                            "STEP2"
-                        ],
-                        duration: 1,
-                        id: "STEP3.2",
-                        type: 0,
-                        materials: []
-                    }
-                ]
-            },
-            {
-                stageNumber: 9,
-                startTime: 20,
+                startTime: 7,
                 steps: [
                     {
                         description: "Third step",
@@ -531,17 +496,79 @@ const case2 = {
                 ]
             },
             {
-                stageNumber: 10,
-                startTime: 24,
+                stageNumber: 7,
+                startTime: 10,
                 steps: [
                     {
-                        description: "Final step 2",
+                        description: "Third step",
                         dependencies: [
-                            "STEP2_2"
+                            "STEP2"
+                        ],
+                        duration: 1,
+                        id: "STEP3.2",
+                        type: 0,
+                        materials: []
+                    }
+                ]
+            },
+            {
+                stageNumber: 8,
+                startTime: 11,
+                steps: [
+                    {
+                        description: "Third step",
+                        dependencies: [
+                            "STEP2"
+                        ],
+                        duration: 3,
+                        id: "STEP3.1",
+                        type: 0,
+                        materials: []
+                    },
+                    {
+                        description: "Third step",
+                        dependencies: [
+                            "STEP2"
                         ],
                         duration: 2,
-                        id: "STEP3_2",
+                        id: "STEP3",
                         type: 0,
+                        materials: []
+                    }
+                ]
+            },
+            {
+                stageNumber: 9,
+                startTime: 14,
+                steps: [
+                    {
+                        description: "Fourth step",
+                        dependencies: [
+                            "STEP3.1",
+                            "STEP3.2",
+                            "STEP3.3"
+                        ],
+                        duration: 2,
+                        id: "STEP4",
+                        type: 0,
+                        materials: []
+                    },
+                    {
+                        description: "Third step",
+                        dependencies: [
+                            "STEP2.2"
+                        ],
+                        duration: 3,
+                        id: "STEP3.5",
+                        type: 0,
+                        materials: []
+                    },
+                    {
+                        description: "Fourth step 2",
+                        dependencies: [ "STEP3.1", "STEP3.2", "STEP3.3" ],
+                        duration: 1,
+                        id: "STEP4.3",
+                        type: StepTypeEnum.Waiting,
                         materials: []
                     },
                     {
@@ -559,8 +586,8 @@ const case2 = {
                 ]
             },
             {
-                stageNumber: 11,
-                startTime: 25,
+                stageNumber: 10,
+                startTime: 16,
                 steps: [
                     {
                         description: "Third step",
@@ -575,37 +602,9 @@ const case2 = {
                 ]
             },
             {
-                stageNumber: 12,
-                startTime: 32,
+                stageNumber: 11,
+                startTime: 23,
                 steps: [
-                    {
-                        description: "Third step",
-                        dependencies: [
-                            "STEP2.2"
-                        ],
-                        duration: 3,
-                        id: "STEP3.5",
-                        type: 0,
-                        materials: []
-                    }
-                ]
-            },
-            {
-                stageNumber: 13,
-                startTime: 35,
-                steps: [
-                    {
-                        description: "Fourth step",
-                        dependencies: [
-                            "STEP3.1",
-                            "STEP3.2",
-                            "STEP3.3"
-                        ],
-                        duration: 2,
-                        id: "STEP4",
-                        type: 0,
-                        materials: []
-                    },
                     {
                         description: "Fourth step",
                         dependencies: [
@@ -623,8 +622,8 @@ const case2 = {
                 ]
             },
             {
-                stageNumber: 14,
-                startTime: 36,
+                stageNumber: 12,
+                startTime: 24,
                 steps: [
                     {
                         description: "Final step",
@@ -642,6 +641,11 @@ const case2 = {
                     }
                 ]
             }
+        ],
+        endTime: 25,
+        results: [
+            "RESULT1" as any,
+            "RESULT2"
         ]
     }
 }

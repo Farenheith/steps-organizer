@@ -26,26 +26,36 @@ export class ParallelizeStepsService extends BaseService<IStepZero, IPlan> imple
 
     async getStages(data: IStepZero): Promise<{ stages: IStage[], endTime:number }> {
         const stages:IStage[] = [];
-        let stageNumber = -1;
+        let stageNumber = 0;
         let startTime = 0;
         let workerNro = 0;
         let working:IStepChain[] = [];
         const nexts = new LinkedList();
         const sleepers = new LinkedList();
+        let stage:IStage | undefined = undefined;
 
         this.addNexts(nexts, sleepers, data.children);
         do {
-            stageNumber++;
-            const stage:IStage = {
-                stageNumber,
-                startTime,
-                steps: []
-            };
-            stages.push(stage);
+            if (!stage || stage.startTime != startTime) {
+                stageNumber++;
+                stage = {
+                    stageNumber,
+                    startTime,
+                    steps: []
+                };
+                stages.push(stage);
+            }
+            let minEndTime = 0;
+            let minSleeperTime = 0;
 
             // Distributing workers, limiting by maxParallelization and available nexts steps
             while (workerNro < data.maxParallelization && nexts.length > 0) {
-                const chain = nexts.shift()!;
+                const chain = nexts.pop()!;
+                chain.startTime = startTime;
+                chain.endTime = startTime + chain.step.duration;
+                if (minEndTime == 0 || chain.endTime < minEndTime) {
+                    minEndTime = chain.endTime;
+                }
                 stage.steps.push(chain.step);
                 //Adding in the working array maitaining the sorting (by StartTimne, desc)
                 await insert(chain, working);
@@ -54,28 +64,30 @@ export class ParallelizeStepsService extends BaseService<IStepZero, IPlan> imple
 
             // Executing sleepers, who doesn't need a worker to advance
             while (sleepers.length > 0) {
-                const chain = sleepers.shift()!;
+                const chain = sleepers.pop()!;
+                chain.startTime = startTime;
+                chain.endTime = startTime + chain.step.duration;
+                if (minSleeperTime == 0 || chain.endTime < minSleeperTime) {
+                    minSleeperTime = chain.endTime;
+                }
                 stage.steps.push(chain.step);
                 //Adding in the working array maitaining the sorting (by StartTimne, desc)
                 await insert(chain, working);
             }
 
             // Checking which step will end sooner, so the startTime of the next stage can be determined
-            const pivot = await this.choosePivot(working, nexts, sleepers);
+            const pivot = await this.choosePivot(working, nexts, sleepers, workerNro);
             // For the next step, at least one worker will be available
-            workerNro--;
-            startTime += pivot.step.duration;
-            while (working.length > 0 && working[0].endTime == pivot.endTime) {
-                const chain = working.pop()!;
-                chain.concluded = true;
-                // Determining the nexts steps from this point
-                this.addNexts(nexts, sleepers, chain.children);
-                //For each step the will end simultaneously with the pivot step, one worker more will be available
-                if (chain.step.type == StepTypeEnum.Intervention) {
-                    workerNro--;
-                }
+            workerNro -= pivot.free;
+            
+            if (pivot.node) {
+                startTime = pivot.node.endTime;
+            } else if (minEndTime > 0) {
+                startTime = minEndTime;
+            } else {
+                startTime = minSleeperTime;
             }
-        } while (nexts.length > 0 || working.length > 0 || sleepers.length > 0);
+        } while (nexts.length > 0 || sleepers.length > 0);
 
         const result = {
             stages,
@@ -92,31 +104,72 @@ export class ParallelizeStepsService extends BaseService<IStepZero, IPlan> imple
         return result;
     }
 
-    async choosePivot(working: IStepChain[], nexts: LinkedList, sleepers: LinkedList) {
-        let pivotCandidate = working.pop()!
-        pivotCandidate.concluded = true;
+    async choosePivot(working: IStepChain[], nexts: LinkedList, sleepers: LinkedList, occupied: number) {
+        let i = working.length - 1;
+        let free = 0;
+        let node: IStepChain | undefined;
+        do {
+            let pivotCandidate = working[i];
+            if (!pivotCandidate.concluded) {
+                pivotCandidate.concluded = true;
+                if (free < occupied && pivotCandidate.step.type == StepTypeEnum.Intervention) {
+                    free++;
+                }
+            }
+            const result = await this.addNexts(nexts, sleepers, pivotCandidate.children);
+            working.pop(); //Remove node because it doesn't need to be revisited
+            i--;
+            if (result.hasAdded) {
+                node = pivotCandidate; //Returns node which reproduced new nexts ocurrences
+                break;
+            }
+        } while (i >= 0);
 
-        while (!await this.addNexts(nexts, sleepers, pivotCandidate.children) && working.length > 0) {
-            pivotCandidate = working.pop()!
-            pivotCandidate.concluded = true;
+        if (node) {
+            if (node.step.type == StepTypeEnum.Waiting) { //Check if there is an intervention node in execution
+                if (working.length > 0) {
+                    const result = await this.choosePivot(working, nexts, sleepers, occupied);
+                    if (result.node) {
+                        node = result.node;
+                    }
+                    free += result.free;
+                }
+            } else {
+                while (i >= 0 && working[i].endTime == node!.endTime) {
+                    const chain = working[i];
+                    if (!chain.concluded) {
+                        chain.concluded = true;
+                        //For each step the will end simultaneously with the pivot step, one worker more will be available
+                        if (free < occupied && chain.step.type == StepTypeEnum.Intervention) {
+                            free++;
+                        }
+                    }
+                    // Determining the nexts steps from this point
+                    await this.addNexts(nexts, sleepers, chain.children);
+                    working.pop();
+                    i--;
+                }
+            }
         }
 
-        return pivotCandidate;
+        return { node, free };
     }
 
     async addNexts(nexts: LinkedList, sleepers: LinkedList, children: IStepChain[]) {
-        let result = false;
+        let hasAdded = false;
+        let remaining = children.length;
         for (let i = 0; i < children.length; i++) {
             const child = children[i];
             if (!child.parents || child.parents.every(x => x.concluded as boolean)) {
+                remaining--;
                 const target = child.step.type === StepTypeEnum.Waiting ? sleepers : nexts;
                 if (!target.get(child.step.id)) {
                     target.push(child);
-                    result = true;
-                }    
+                    hasAdded = true;
+                }
             }
         }
-        return result;
+        return { hasAdded, remaining };
     }
     
     getJoi() {
