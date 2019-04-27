@@ -4,6 +4,7 @@ import { IParallelizeStepsService } from "../../interfaces/2 - domain/paralleliz
 import { IStepZero } from "../../interfaces/2 - domain/models/step-zero.interface";
 import { IStepChain } from "../../interfaces/2 - domain/models/step-chain.interface";
 import { injectable, inject } from "inversify";
+import { StepTypeEnum } from "../../interfaces/2 - domain/models/enums/step-type.enum";
 
 @injectable()
 export class ParallelizeStepsService extends BaseService<IStepZero, IPlan> implements IParallelizeStepsService {
@@ -30,9 +31,10 @@ export class ParallelizeStepsService extends BaseService<IStepZero, IPlan> imple
         let reference: { [x: string]: IStepChain} = {};
         let working:IStepChain[] = [];
         const nexts:IStepChain[] = [];
+        const sleepers:IStepChain[] = []
 
-        this.addNexts(nexts, data.children);
-        while (nexts.length > 0) {
+        this.addNexts(nexts, sleepers, data.children);
+        do {
             stageNumber++;
             const stage:IStage = {
                 stageNumber,
@@ -41,53 +43,78 @@ export class ParallelizeStepsService extends BaseService<IStepZero, IPlan> imple
             };
             stages.push(stage);
 
-            // Distributing workers, limiing by maxParallelization and available nexts steps
+            // Distributing workers, limiting by maxParallelization and available nexts steps
             while (count < data.maxParallelization && nexts.length > 0) {
                 const chain = nexts.shift()!;
                 stage.steps.push(chain.step);
                 reference[chain.step.id] = chain;
                 //Adding in the working array maitaining the sorting (by StartTimne, desc)
-                working.push(chain);
-                // await insert(chain, working);
+                await insert(chain, working);
                 count++;
             }
 
-            // Determining the nexts steps from this point
-            stage.steps.forEach(step => {
-                const current = reference[step.id];
-                this.addNexts(nexts, current.children);
-            });
+            // Executing sleepers, who doesn't need a worker to advance
+            while (sleepers.length > 0) {
+                const chain = sleepers.shift()!;
+                stage.steps.push(chain.step);
+                reference[chain.step.id] = chain;
+                //Adding in the working array maitaining the sorting (by StartTimne, desc)
+                await insert(chain, working);
+            }
 
-            // Checking which step will end sooner, so the startTime of the next stage can be determined 
-            const pivot = working.shift()!;
+            // Checking which step will end sooner, so the startTime of the next stage can be determined
+            const pivot = await this.choosePivot(working, nexts, sleepers);
             // For the next step, at least one worker will be available
             count--;
             startTime = pivot.endTime;
             while (working.length > 0 && working[0].endTime == pivot.endTime) {
-                working.shift();
+                const chain = working.shift()!;
+                chain.concluded = true;
+                // Determining the nexts steps from this point
+                this.addNexts(nexts, sleepers, chain.children);
                 //For each step the will end simultaneously with the pivot step, one worker more will be available
-                count--;
+                if (chain.step.type == StepTypeEnum.Intervention) {
+                    count--;
+                }
             }
-        }
+        } while (nexts.length > 0 || working.length > 0 || sleepers.length > 0);
 
         return stages;
     }
 
-    async addNexts(nexts: IStepChain[], children: IStepChain[]) {
+    async choosePivot(working:IStepChain[], nexts:IStepChain[], sleepers:IStepChain[]) {
+        let pivotCandidate = working.shift()!
+        pivotCandidate.concluded = true;
+
+        while (!await this.addNexts(nexts, sleepers, pivotCandidate.children) && working.length > 0) {
+            pivotCandidate = working.shift()!
+            pivotCandidate.concluded = true;
+        }
+
+        return pivotCandidate;
+    }
+
+    async addNexts(nexts: IStepChain[], sleepers: IStepChain[], children: IStepChain[]) {
+        let result = false;
         for (let i = 0; i < children.length; i++) {
             const child = children[i];
-            if (nexts.length == 0 || nexts.findIndex(x => x.step.id === child.step.id) < 0) {
-                nexts.push(child);
-                // await insert(chain, nexts);
+            if (!child.parents || child.parents.every(x => x.concluded as boolean)) {
+                const target = child.step.type === StepTypeEnum.Waiting ? sleepers : nexts;
+                if (target.length == 0 || target.findIndex(x => x.step.id === child.step.id) < 0) {
+                    target.push(child);
+                    result = true;
+                    // await insert(chain, target);
+                }    
             }
         }
+        return result;
     }
     
     getJoi() {
     }
 }
 
-/*
+
 async function locationOf(element: IStepChain, array: IStepChain[]) {
     let start = 0;
     let end = array.length;
@@ -95,11 +122,16 @@ async function locationOf(element: IStepChain, array: IStepChain[]) {
     do {
         var pivot = ~~(start + (end - start) / 2);
 
-        if (end-start <= 1 || array[pivot].endTime === element.endTime) {
+        if (end-start == 1) {
+            if (array[pivot].endTime <= element.endTime)
+                pivot++;
+                break;
+        } else if (end-start < 1 || array[pivot].endTime === element.endTime) {
+                pivot++;
             break;
         }
 
-        if (array[pivot].endTime > element.endTime) {
+        if (array[pivot].endTime < element.endTime) {
             start = pivot;
         } else {
             end = pivot;
@@ -109,8 +141,7 @@ async function locationOf(element: IStepChain, array: IStepChain[]) {
     return pivot;
 }
 
-async function insert(element: IStepChain, array: IStepChain[]) {
-    array.splice((await locationOf(element, array)) + 1, 0, element);
+export async function insert(element: IStepChain, array: IStepChain[]) {
+    array.splice((await locationOf(element, array)), 0, element);
     return array;
 }
-*/

@@ -34,7 +34,7 @@ export class OrganizeStepsService extends BaseService<IWorkResume, IStepZero>
                     for (let d = 0; d < step.dependencies.length; d++) {
                         const parent = stepChains[step.dependencies[d]];
                         if (!parent) {
-                            this.message(`Cadeia de passos mal definida! Verifique a receita ${index + 1}`, `invalidOrder`);
+                            this.message(`Cadeia de passos mal definida! Verifique a receita ${index + 1} (pai: ${step.dependencies[d]} de ${step.id})`, `invalidOrder`);
                             return null;
                         }
                         parent.children.push(stepChain);

@@ -1,6 +1,6 @@
 import "jasmine";
 import "reflect-metadata";
-import { ParallelizeStepsService } from "../../src/implementation/2 - domain/parallelize-steps.service"
+import { ParallelizeStepsService, insert } from "../../src/implementation/2 - domain/parallelize-steps.service"
 import { IStepChain } from "../../src/interfaces/2 - domain/models/step-chain.interface";
 import { StepTypeEnum } from "../../src/interfaces/2 - domain/models/enums/step-type.enum";
 import { IStepZero } from "../../src/interfaces/2 - domain/models/step-zero.interface";
@@ -8,7 +8,7 @@ import { IStepZero } from "../../src/interfaces/2 - domain/models/step-zero.inte
 describe("ParallelizeStepsService", () => {
     it("proceed: ok", async () => {
         //Arrange
-        const target = new ParallelizeStepsService({} as any, {} as any, {} as any);
+        const target = new ParallelizeStepsService({} as any, {} as any);
         spyOn(target, "getStages").and.returnValue(Promise.resolve("EXPECTED_STAGES" as any));
 
         //Act
@@ -24,7 +24,7 @@ describe("ParallelizeStepsService", () => {
 
     it("getStages: ok", async () => {
         //Arrange
-        const target = new ParallelizeStepsService({} as any, {} as any, {} as any);
+        const target = new ParallelizeStepsService({} as any, {} as any);
 
         //First workflow
         const chain1:IStepChain = {
@@ -175,5 +175,81 @@ describe("ParallelizeStepsService", () => {
                 ]
             }
         ]);
+    });
+
+    
+
+    it("insert: ok (last)", async () => {
+        //Arrange
+        const array = [
+            {
+                endTime: 1
+            },
+            {
+                endTime: 2
+            },
+            {
+                endTime: 3
+            }
+        ] as any[];
+        const element = {
+            endTime: 4
+        } as any;
+
+        //Act
+        const result = await insert(element, array);
+
+        //Assert
+        expect(result).toEqual([
+            {
+                endTime: 1
+            },
+            {
+                endTime: 2
+            },
+            {
+                endTime: 3
+            },
+            {
+                endTime: 4
+            }
+        ] as any);
+    });
+
+    it("insert: ok (first)", async () => {
+        //Arrange
+        const array = [
+            {
+                endTime: 1
+            },
+            {
+                endTime: 2
+            },
+            {
+                endTime: 3
+            }
+        ] as any[];
+        const element = {
+            endTime: 0
+        } as any;
+
+        //Act
+        const result = await insert(element, array);
+
+        //Assert
+        expect(result).toEqual([
+            {
+                endTime: 0
+            },
+            {
+                endTime: 1
+            },
+            {
+                endTime: 2
+            },
+            {
+                endTime: 3
+            }
+        ] as any);
     });
 });
