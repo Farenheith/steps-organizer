@@ -6,6 +6,7 @@ const organize_steps_service_1 = require("./implementation/2 - domain/organize-s
 const parallelize_steps_service_1 = require("./implementation/2 - domain/parallelize-steps.service");
 const plan_steps_service_1 = require("./implementation/2 - domain/plan-steps.service");
 const step_planner_application_1 = require("./implementation/1 - application/step-planner.application");
+require("reflect-metadata");
 class AppContainer extends base_ddd_1.BaseAppContainer {
     constructor() {
         super(base_ddd_1.RequestInfoService, {

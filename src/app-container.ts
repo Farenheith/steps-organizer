@@ -8,6 +8,7 @@ import { IPlanStepsService } from "./interfaces/2 - domain/plan-steps-service.in
 import { PlanStepsService } from "./implementation/2 - domain/plan-steps.service";
 import { IStepPlannerApplication } from "./interfaces/1 - application/step-planner-application.interface";
 import { StepPlannerApplication } from "./implementation/1 - application/step-planner.application";
+import "reflect-metadata";
 
 export class AppContainer extends BaseAppContainer<ISettings> {
     constructor() {
