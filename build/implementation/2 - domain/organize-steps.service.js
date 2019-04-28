@@ -34,7 +34,7 @@ let OrganizeStepsService = class OrganizeStepsService extends base_ddd_1.BaseSer
                     for (let d = 0; d < step.dependencies.length; d++) {
                         const parent = stepChains[step.dependencies[d]];
                         if (!parent) {
-                            this.message(`Cadeia de passos mal definida! Verifique a receita ${index + 1}`, `invalidOrder`);
+                            this.message(`Cadeia de passos mal definida! Verifique a receita ${index + 1} (pai: ${step.dependencies[d]} de ${step.id})`, `invalidOrder`);
                             return null;
                         }
                         parent.children.push(stepChain);
@@ -70,6 +70,8 @@ let OrganizeStepsService = class OrganizeStepsService extends base_ddd_1.BaseSer
         return {
             name: joi.string().min(3),
             descriptiosn: joi.string(),
+            workflows: joi.array(),
+            maxParallelization: joi.number().positive().integer()
         };
     }
 };
