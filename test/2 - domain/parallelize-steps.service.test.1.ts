@@ -13,7 +13,7 @@ describe("ParallelizeStepsService", () => {
         const container = new AppContainer();
 
         //Act
-        const result = container.get(TYPES.domainServices.IParallelizeStepsService);
+        const result = container.get(TYPES.domainServices.IPlanStepsService);
 
         //Assert
         expect(result instanceof ParallelizeStepsService).toBeTruthy();

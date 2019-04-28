@@ -4,8 +4,21 @@ import { OrganizeStepsService } from "../../src/implementation/2 - domain/organi
 import { IWorkResume } from "../../src/interfaces/2 - domain/models/work-resume.interface";
 import { StepTypeEnum } from "../../src/interfaces/2 - domain/models/enums/step-type.enum";
 import { IStepChain } from "../../src/interfaces/2 - domain/models/step-chain.interface";
+import { AppContainer } from "../../src/app-container";
+import { TYPES } from "../../src/types";
 
 describe("OrganizeStepsService", () => {
+    it("constructor: ok", async () => {
+        //Arrange
+        const container = new AppContainer();
+
+        //Act
+        const result = container.get(TYPES.domainServices.IOrganizeStepsService);
+
+        //Assert
+        expect(result instanceof OrganizeStepsService).toBeTruthy();
+    });
+
     it("proceed: fail (parent not found)", async () => {
         //Arrange
         const target = new OrganizeStepsService({} as any, {} as any);

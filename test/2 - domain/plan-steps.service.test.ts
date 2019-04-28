@@ -10,6 +10,17 @@ import { PlanStepsService } from "../../src/implementation/2 - domain/plan-steps
 import { IPlan } from "../../src/interfaces/2 - domain/models/plan.interface";
 
 describe("PlanStepsService", () => {
+    it("constructor: ok", async () => {
+        //Arrange
+        const container = new AppContainer();
+
+        //Act
+        const result = container.get(TYPES.domainServices.IPlanStepsService);
+
+        //Assert
+        expect(result instanceof PlanStepsService).toBeTruthy();
+    });
+
     it("do: ok case 1", () => {
         return testCase(case1.input, case1.expect);
     });
