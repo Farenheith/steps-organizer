@@ -2,7 +2,7 @@
   "name": "steps-organizer",
   "version": "0.0.1",
   "description": "Steps Organizer",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "nyc npm run testNoCoverage",
     "testNoCoverage": "jasmine-ts --config=jasmine.json",
